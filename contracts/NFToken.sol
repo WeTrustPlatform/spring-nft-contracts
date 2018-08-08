@@ -75,15 +75,6 @@ contract NFToken is ERC721, SupportsInterface {
         _;
     }
 
-    /**
-     * @dev Guarantees that _tokenId is a valid Token.
-     * @param _tokenId ID of the NFT to validate.
-     */
-    modifier validNFToken(uint256 _tokenId) {
-        require(nft[_tokenId].owner != address(0));
-        _;
-    }
-
     modifier onlyNonZeroAddress(address toTest) {
         require(toTest != address(0));
         _;
@@ -103,12 +94,11 @@ contract NFToken is ERC721, SupportsInterface {
     /**
      * @dev A mapping from NFT ID to the address that owns it.
      */
-    mapping (uint256 => NFT) internal nft;
+    mapping (uint256 => NFT) public nft;
 
-    /**
-     * @dev Mapping from NFT ID to approved address.
-     */
-    mapping (uint256 => address) internal approvals;
+    uint256 nftCount;
+
+    mapping (uint256 => bytes) nftArtistSignature;
 
     /**
     * @dev Mapping from owner address to count of his tokens.
@@ -124,17 +114,9 @@ contract NFToken is ERC721, SupportsInterface {
         address owner;
         address approval;
         bytes32 traits;
-        bytes4 batchNum;
+        uint16 edition;
         bytes4 nftType;
-        uint256 orgId;
-    }
-
-    struct Org {
-        string name;
-        string url;
-        address owner;
-        string[] updates;
-        uint256 nftCount;
+        bytes32 recipientId;
     }
 
     ////////////////////////////////
@@ -205,10 +187,10 @@ contract NFToken is ERC721, SupportsInterface {
      * @param _tokenId The NFT to transfer.
      */
     function transferFrom(address _from, address _to, uint256 _tokenId)
-    onlyNonZeroAddress(_to)
-    canTransfer(_tokenId)
-    validNFToken(_tokenId)
-    external {
+      onlyNonZeroAddress(_to)
+      canTransfer(_tokenId)
+      ownerExists(_tokenId)
+      external {
         address tokenOwner = nft[_tokenId].owner;
         require(tokenOwner == _from);
 
@@ -224,19 +206,19 @@ contract NFToken is ERC721, SupportsInterface {
      */
     function approve(address _approved, uint256 _tokenId)
       canOperate(_tokenId)
-      validNFToken(_tokenId)
+      ownerExists(_tokenId)
       external {
         address tokenOwner = nft[_tokenId].owner;
         require(_approved != tokenOwner);
 
-        approvals[_tokenId] = _approved;
+        nft[_tokenId].approval = _approved;
         emit Approval(tokenOwner, _approved, _tokenId);
     }
 
     function _safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data)
     onlyNonZeroAddress(_to)
     canTransfer(_tokenId)
-    validNFToken(_tokenId)
+    ownerExists(_tokenId)
     internal{
         address tokenOwner = nft[_tokenId].owner;
         require(tokenOwner == _from);
@@ -266,9 +248,9 @@ contract NFToken is ERC721, SupportsInterface {
      * @param _tokenId ID of the NFT to query the approval of.
      */
     function getApproved(uint256 _tokenId)
-      validNFToken(_tokenId)
+      ownerExists(_tokenId)
       public view returns (address) {
-        return approvals[_tokenId];
+        return nft[_tokenId].approval;
     }
 
     /**
@@ -321,9 +303,9 @@ contract NFToken is ERC721, SupportsInterface {
      * @param _tokenId ID of the NFT to be transferred.
      */
     function clearApproval(uint256 _tokenId) private {
-        if(approvals[_tokenId] != 0)
+        if(nft[_tokenId].approval != address(0))
         {
-            delete approvals[_tokenId];
+            delete nft[_tokenId].approval;
         }
     }
 
@@ -349,6 +331,7 @@ contract NFToken is ERC721, SupportsInterface {
     function addNFToken(address _to, uint256 _tokenId) noOwnerExists(_tokenId) internal {
         nft[_tokenId].owner = _to;
         ownerToNFTokenCount[_to]++;
+        nftCount++;
     }
 
 }
