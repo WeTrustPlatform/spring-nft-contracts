@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.23;
 
 import './NFToken.sol';
 
@@ -27,12 +27,20 @@ contract SpringNFT is NFToken{
 
     address wetrustAddress;
     mapping(bytes32 => Recipient) public recipients;
+    mapping(bytes32 => Update[]) public recipientUpdates;
+    mapping(bytes32 => bool) public redeemedToken;
+
+    mapping (uint256 => bytes) public nftArtistSignature;
+
+    struct Update {
+        string url;
+        uint256 createdAt;
+    }
 
     struct Recipient {
         string name;
         string url;
         address owner;
-        string[] updates;
         uint256 nftCount;
         bool exists;
     }
@@ -41,25 +49,17 @@ contract SpringNFT is NFToken{
         wetrustAddress = WeTrust;
     }
 
-    function createNFT(address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType) recipientExists(recipientId) onlyByWeTrust public returns (uint256 tokenId) {
-        tokenId = nftCount + 1;
-
-        nft[tokenId].owner = receiver;
-        nft[tokenId].traits = traits;
-        nft[tokenId].recipientId = recipientId;
-        nft[tokenId].nftType = nftType;
-        nft[tokenId].edition = determineEdition(recipientId);
-
-        recipients[recipientId].nftCount++;
+    function createNFT(address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType) onlyByWeTrust public returns (uint256 tokenId) {
+        return mint(receiver, recipientId, traits, nftType);
     }
 
     // each message must be in the following format
-    // address receiver 20 bytes
+    // address receiver , although address is 20 bytes, it is stored in 32 bytes
     // bytes32 recipientId
     // bytes32 trait
     // bytes4 nftType
     function batchCreate(bytes nftparams) onlyByWeTrust public returns (bool success) {
-        uint256 numOfNFT = nftparams.length / 88;
+        uint256 numOfNFT = nftparams.length / 100;
 
         address receiver;
         bytes32 recipientId;
@@ -68,10 +68,10 @@ contract SpringNFT is NFToken{
 
         for (uint256 pos = 0; pos < numOfNFT; pos++) {
             assembly {
-                receiver := mload(add(nftparams, add(32, mul(88,pos))))
-                recipientId := mload(add(nftparams, add(52, mul(88,pos))))
-                traits := mload(add(nftparams, add(84, mul(88,pos))))
-                nftType := mload(add(nftparams, add(116, mul(88,pos))))
+                receiver := mload(add(nftparams, add(32, mul(100,pos))))
+                recipientId := mload(add(nftparams, add(64, mul(100,pos))))
+                traits := mload(add(nftparams, add(96, mul(100,pos))))
+                nftType := mload(add(nftparams, add(128, mul(100,pos))))
             }
             createNFT(receiver, recipientId, traits, nftType);
         }
@@ -83,11 +83,13 @@ contract SpringNFT is NFToken{
     // bytes4 nftType
     // bytes32 traits
     // bytes32 recipientId
+    // bytes32 uniqueToken
     // bytes signature
-    function redeemToken(bytes signedMessage) public {
+    function redeemToken(bytes signedMessage) public returns(uint256 tokenId) {
         bytes4 nftType;
         bytes32 traits;
         bytes32 recipientId;
+        bytes32 uniqueToken;
         bytes32 r;
         bytes32 s;
         uint8 v;
@@ -96,20 +98,22 @@ contract SpringNFT is NFToken{
             nftType := mload(add(signedMessage, 32)) // first 32 bytes are data padding
             traits := mload(add(signedMessage, 36))
             recipientId := mload(add(signedMessage, 68))
-            r := mload(add(signedMessage, 100))
-            s := mload(add(signedMessage, 132))
-            v := mload(add(signedMessage, 164))
+            uniqueToken := mload(add(signedMessage, 100))
+            r := mload(add(signedMessage, 132))
+            s := mload(add(signedMessage, 164))
+            v := mload(add(signedMessage, 196))
+        }
+        require(!redeemedToken[uniqueToken]);
+        if (v < 27) {
+            v += 27;
         }
 
-        bytes32 msgHash = keccak256(
-            abi.encodePacked(
-                nftType,
-                traits,
-                recipientId));
+        bytes32 msgHash = createRedeemMessageHash(nftType, traits, recipientId, uniqueToken);
         address signer = ecrecover(msgHash, v, r, s);
 
         require(signer == wetrustAddress);
-        createNFT(msg.sender, recipientId, traits, nftType);
+        redeemedToken[uniqueToken] = true;
+        return mint(msg.sender, recipientId, traits, nftType);
     }
 
     function addRecipient(bytes32 recipientId, string name, string url, address owner) recipientDoesNotExists(recipientId) onlyByWeTrust public {
@@ -122,7 +126,7 @@ contract SpringNFT is NFToken{
     }
 
     function addRecipientUpdate(bytes32 recipientId, string url) recipientExists(recipientId) onlyByWeTrustOrRecipient(recipientId) public {
-        recipients[recipientId].updates.push(url);
+        recipientUpdates[recipientId].push(Update(url, now));
     }
 
     function updateRecipientInfo(bytes32 recipientId, string name, string url, address owner) recipientExists(recipientId) onlyByWeTrust public {
@@ -139,10 +143,39 @@ contract SpringNFT is NFToken{
         nftArtistSignature[nftId] = artistSignature;
     }
 
+    function getUpdateCount(bytes32 recipientId) view public returns(uint256 count) {
+        return recipientUpdates[recipientId].length;
+    }
+
+    function createRedeemMessageHash(bytes4 nftType, bytes32 traits, bytes32 recipientId, bytes32 uniqueToken) pure public returns(bytes32 msgHash) {
+        return keccak256(
+            abi.encodePacked(
+                nftType,
+                traits,
+                recipientId,
+                uniqueToken
+            ));
+    }
 
     //////////////////////////
     // Private Functions
     /////////////////////////
+
+    function mint(address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType) recipientExists(recipientId) internal returns (uint256 tokenId) {
+        nftCount++;
+
+        nft[nftCount].owner = receiver;
+        nft[nftCount].traits = traits;
+        nft[nftCount].recipientId = recipientId;
+        nft[nftCount].nftType = nftType;
+        nft[nftCount].createdAt = now;
+        nft[nftCount].edition = determineEdition(recipientId);
+
+        recipients[recipientId].nftCount++;
+        ownerToNFTokenCount[receiver]++;
+
+        return nftCount;
+    }
 
     // determine the edition using the following formula
     // f(x) = max( 100 + (300 (x -1), 5000)

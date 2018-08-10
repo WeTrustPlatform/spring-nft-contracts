@@ -98,8 +98,6 @@ contract NFToken is ERC721, SupportsInterface {
 
     uint256 nftCount;
 
-    mapping (uint256 => bytes) nftArtistSignature;
-
     /**
     * @dev Mapping from owner address to count of his tokens.
     */
@@ -117,6 +115,7 @@ contract NFToken is ERC721, SupportsInterface {
         uint16 edition;
         bytes4 nftType;
         bytes32 recipientId;
+        uint256 createdAt;
     }
 
     ////////////////////////////////
@@ -215,21 +214,6 @@ contract NFToken is ERC721, SupportsInterface {
         emit Approval(tokenOwner, _approved, _tokenId);
     }
 
-    function _safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data)
-    onlyNonZeroAddress(_to)
-    canTransfer(_tokenId)
-    ownerExists(_tokenId)
-    internal{
-        address tokenOwner = nft[_tokenId].owner;
-        require(tokenOwner == _from);
-
-        _transfer(_to, _tokenId);
-
-        if (_to.isContract()) {
-            bytes4 retval = ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
-            require(retval == MAGIC_ON_ERC721_RECEIVED);
-        }
-    }
     /**
      * @dev Enables or disables approval for a third party ("operator") to manage all of
      * `msg.sender`'s assets. It also emits the ApprovalForAll event.
@@ -282,20 +266,20 @@ contract NFToken is ERC721, SupportsInterface {
         emit Transfer(from, _to, _tokenId);
     }
 
-    /**
-     * @dev Mints a new NFT.
-     * @notice This is a private function which should be called from user-implemented external
-     * mint function. Its purpose is to show and properly initialize data structures when using this
-     * implementation.
-     * @param _to The address that will own the minted NFT.
-     * @param _tokenId of the NFT to be minted by the msg.sender.
-     */
-    function _mint(address _to, uint256 _tokenId) onlyNonZeroAddress(_to) noOwnerExists(_tokenId) internal {
-        require(_tokenId != 0);
+    function _safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data)
+      onlyNonZeroAddress(_to)
+      canTransfer(_tokenId)
+      ownerExists(_tokenId)
+      internal{
+        address tokenOwner = nft[_tokenId].owner;
+        require(tokenOwner == _from);
 
-        addNFToken(_to, _tokenId);
+        _transfer(_to, _tokenId);
 
-        emit Transfer(address(0), _to, _tokenId);
+        if (_to.isContract()) {
+            bytes4 retval = ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
+            require(retval == MAGIC_ON_ERC721_RECEIVED);
+        }
     }
 
     /**
