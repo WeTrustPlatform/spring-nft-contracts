@@ -1,0 +1,25 @@
+{
+  "name": "spring-nft-contracts",
+  "version": "0.0.1",
+  "description": "WeTrust Spring Smart Contracts",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WeTrustPlatform/spring-nft-contracts.git"
+  },
+  "author": "shine2lay",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/WeTrustPlatform/spring-nft-contracts/issues"
+  },
+  "homepage": "https://github.com/WeTrustPlatform/spring-nft-contracts#readme",
+  "devDependencies": {
+    "solidity-coverage": "^0.5.7"
+  }
+}
