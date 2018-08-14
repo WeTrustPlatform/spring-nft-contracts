@@ -8,7 +8,7 @@
   },
   "scripts": {
     "lint": "solium -d contracts/ --fix",
-    "test": "truffle test"
+    "test": "solidity-coverage"
   },
   "repository": {
     "type": "git",
