@@ -25,6 +25,7 @@
     "solium": "^1.1.8"
   },
   "dependencies": {
+    "chai": "^4.1.2",
     "truffle": "4.1.14"
   }
 }
