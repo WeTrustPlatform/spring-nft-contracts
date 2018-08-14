@@ -66,7 +66,7 @@ contract NFToken is ERC721, SupportsInterface {
      */
     modifier canOperate(uint256 _tokenId) {
         address tokenOwner = nft[_tokenId].owner;
-        require(tokenOwner == msg.sender || ownerToOperators[tokenOwner][msg.sender]);
+        require(tokenOwner == msg.sender || ownerToOperators[tokenOwner][msg.sender], "Sender is not an authorized operator of this token");
         _;
     }
 
@@ -77,10 +77,9 @@ contract NFToken is ERC721, SupportsInterface {
     modifier canTransfer(uint256 _tokenId) {
         address tokenOwner = nft[_tokenId].owner;
         require(
-            tokenOwner == msg.sender
-            || getApproved(_tokenId) == msg.sender
-            || ownerToOperators[tokenOwner][msg.sender]
-        );
+            tokenOwner == msg.sender ||
+            getApproved(_tokenId) == msg.sender || ownerToOperators[tokenOwner][msg.sender],
+            "Sender does not have permission to transfer this Token");
 
         _;
     }
@@ -90,7 +89,7 @@ contract NFToken is ERC721, SupportsInterface {
      * @param toTest The Address to make sure it's not zero address
      */
     modifier onlyNonZeroAddress(address toTest) {
-        require(toTest != address(0));
+        require(toTest != address(0), "Address must be non zero address");
         _;
     }
 
@@ -99,7 +98,7 @@ contract NFToken is ERC721, SupportsInterface {
      * @param nftId NFT to test
      */
     modifier noOwnerExists(uint256 nftId) {
-        require(nft[nftId].owner == address(0));
+        require(nft[nftId].owner == address(0), "Owner must not exist for this token");
         _;
     }
 
@@ -108,7 +107,7 @@ contract NFToken is ERC721, SupportsInterface {
      * @param nftId NFT to test
      */
     modifier ownerExists(uint256 nftId) {
-        require(nft[nftId].owner != address(0));
+        require(nft[nftId].owner != address(0), "Owner must exist for this token");
         _;
     }
 
@@ -221,7 +220,7 @@ contract NFToken is ERC721, SupportsInterface {
     {
 
         address tokenOwner = nft[_tokenId].owner;
-        require(tokenOwner == _from);
+        require(tokenOwner == _from, "from address must be owner of tokenId");
 
         _transfer(_to, _tokenId);
     }
@@ -240,7 +239,7 @@ contract NFToken is ERC721, SupportsInterface {
     {
 
         address tokenOwner = nft[_tokenId].owner;
-        require(_approved != tokenOwner);
+        require(_approved != tokenOwner, "approved address cannot be owner of the token");
 
         nft[_tokenId].approval = _approved;
         emit Approval(tokenOwner, _approved, _tokenId);
@@ -316,13 +315,13 @@ contract NFToken is ERC721, SupportsInterface {
         internal
     {
         address tokenOwner = nft[_tokenId].owner;
-        require(tokenOwner == _from);
+        require(tokenOwner == _from, "from address must be owner of tokenId");
 
         _transfer(_to, _tokenId);
 
         if (_to.isContract()) {
             bytes4 retval = ERC721TokenReceiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
-            require(retval == MAGIC_ON_ERC721_RECEIVED);
+            require(retval == MAGIC_ON_ERC721_RECEIVED, "reciever contract did not return the correct return value");
         }
     }
 
@@ -344,7 +343,7 @@ contract NFToken is ERC721, SupportsInterface {
      * @param _tokenId Which NFT we want to remove.
      */
     function removeNFToken(address _from, uint256 _tokenId) internal {
-        require(nft[_tokenId].owner == _from);
+        require(nft[_tokenId].owner == _from, "from address must be owner of tokenId");
         assert(ownerToNFTokenCount[_from] > 0);
         ownerToNFTokenCount[_from] = ownerToNFTokenCount[_from] - 1;
         delete nft[_tokenId].owner;

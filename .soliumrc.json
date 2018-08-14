@@ -3,6 +3,9 @@
   "plugins": [
   ],
   "rules": {
+    "visibility-first": [
+      "off"
+    ],
     "quotes": [
       "error",
       "double"

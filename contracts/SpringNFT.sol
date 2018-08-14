@@ -13,7 +13,7 @@ contract SpringNFT is NFToken{
      * @param id receipientId to check
      */
     modifier recipientExists(bytes32 id) {
-        require(recipients[id].exists);
+        require(recipients[id].exists, "Recipient Must exist");
         _;
     }
 
@@ -22,7 +22,7 @@ contract SpringNFT is NFToken{
      * @param id receipientId to check
      */
     modifier recipientDoesNotExists(bytes32 id) {
-        require(!recipients[id].exists);
+        require(!recipients[id].exists, "Recipient Must not exists");
         _;
     }
 
@@ -30,7 +30,7 @@ contract SpringNFT is NFToken{
      * @dev Guarrentees that msg.sender is wetrust owned address
      */
     modifier onlyByWeTrust() {
-        require(msg.sender == wetrustAddress);
+        require(msg.sender == wetrustAddress, "sender must be from WeTrust Address");
         _;
     }
 
@@ -39,7 +39,7 @@ contract SpringNFT is NFToken{
      * @param id receipientId to check
      */
     modifier onlyByWeTrustOrRecipient(bytes32 id) {
-        require(msg.sender == wetrustAddress || msg.sender == recipients[id].owner);
+        require(msg.sender == wetrustAddress || msg.sender == recipients[id].owner, "sender must be from WeTrust or Recipient's owner address");
         _;
     }
 
@@ -171,7 +171,7 @@ contract SpringNFT is NFToken{
             s := mload(add(signedMessage, 164))
             v := mload(add(signedMessage, 196))
         }
-        require(!redeemedToken[uniqueToken]);
+        require(!redeemedToken[uniqueToken], "This token has been redeemed already");
         if (v < 27) {
             v += 27;
         }
@@ -179,7 +179,7 @@ contract SpringNFT is NFToken{
         bytes32 msgHash = createRedeemMessageHash(nftType, traits, recipientId, uniqueToken);
         address signer = ecrecover(msgHash, v, r, s);
 
-        require(signer == wetrustAddress);
+        require(signer == wetrustAddress, "WeTrust did not authorized this redeem script");
         redeemedToken[uniqueToken] = true;
         return mint(msg.sender, recipientId, traits, nftType);
     }
@@ -196,7 +196,7 @@ contract SpringNFT is NFToken{
         recipientDoesNotExists(recipientId)
         public
     {
-        require(bytes(name).length > 0); // no empty string
+        require(bytes(name).length > 0, "name must not be empty string"); // no empty string
 
         recipients[recipientId].name = name;
         recipients[recipientId].url = url;
@@ -229,7 +229,7 @@ contract SpringNFT is NFToken{
         recipientExists(recipientId)
         public
     {
-        require(bytes(name).length > 0); // no empty string
+        require(bytes(name).length > 0, "name must not be empty string"); // no empty string
 
         recipients[recipientId].name = name;
         recipients[recipientId].url = url;
@@ -242,7 +242,7 @@ contract SpringNFT is NFToken{
      * @param artistSignature Artist Signed Message
      */
     function addArtistSignature(uint256 nftId, bytes artistSignature) onlyByWeTrust public {
-        require(nftArtistSignature[nftId].length == 0); // make sure no prior signature exists
+        require(nftArtistSignature[nftId].length == 0, "Artist Signature already exist for this token"); // make sure no prior signature exists
 
         nftArtistSignature[nftId] = artistSignature;
     }
