@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "node"
+branches:
+  only:
+  - master
+  - develop
+script:
+  - npm run lint
+  - npm test
