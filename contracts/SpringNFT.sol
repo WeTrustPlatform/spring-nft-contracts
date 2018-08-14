@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import './NFToken.sol';
+import "./NFToken.sol";
 
 //@dev Implemention of NFT for WeTrust Spring
 contract SpringNFT is NFToken{
@@ -102,11 +102,12 @@ contract SpringNFT is NFToken{
      */
 
     function createNFT(
-      address receiver,
-      bytes32 recipientId,
-      bytes32 traits,
-      bytes4 nftType)
-      onlyByWeTrust public returns (uint256 tokenId) {
+        address receiver,
+        bytes32 recipientId,
+        bytes32 traits,
+        bytes4 nftType)
+        onlyByWeTrust public returns (uint256 tokenId)
+    {
         return mint(receiver, recipientId, traits, nftType);
     }
 
@@ -191,9 +192,10 @@ contract SpringNFT is NFToken{
      * @param owner Address owned by the recipient
      */
     function addRecipient(bytes32 recipientId, string name, string url, address owner)
-      onlyByWeTrust
-      recipientDoesNotExists(recipientId)
-      public {
+        onlyByWeTrust
+        recipientDoesNotExists(recipientId)
+        public
+    {
         require(bytes(name).length > 0); // no empty string
 
         recipients[recipientId].name = name;
@@ -208,9 +210,10 @@ contract SpringNFT is NFToken{
      * @param url link to the update
      */
     function addRecipientUpdate(bytes32 recipientId, string url)
-      recipientExists(recipientId)
-      onlyByWeTrustOrRecipient(recipientId)
-      public {
+        recipientExists(recipientId)
+        onlyByWeTrustOrRecipient(recipientId)
+        public
+    {
         recipientUpdates[recipientId].push(Update(url, now));
     }
 
@@ -222,9 +225,10 @@ contract SpringNFT is NFToken{
      * @param owner new address owned by the recipient
      */
     function updateRecipientInfo(bytes32 recipientId, string name, string url, address owner)
-      onlyByWeTrust
-      recipientExists(recipientId)
-      public {
+        onlyByWeTrust
+        recipientExists(recipientId)
+        public
+    {
         require(bytes(name).length > 0); // no empty string
 
         recipients[recipientId].name = name;
@@ -259,11 +263,12 @@ contract SpringNFT is NFToken{
      * @param uniqueToken Unique string to avoid using the same message to create multiple NFT
      */
     function createRedeemMessageHash(
-      bytes4 nftType,
-      bytes32 traits,
-      bytes32 recipientId,
-      bytes32 uniqueToken)
-      pure public returns(bytes32 msgHash) {
+        bytes4 nftType,
+        bytes32 traits,
+        bytes32 recipientId,
+        bytes32 uniqueToken)
+        pure public returns(bytes32 msgHash)
+    {
         return keccak256(
             abi.encodePacked(
                 nftType,
@@ -311,8 +316,9 @@ contract SpringNFT is NFToken{
      * @param nftType Type of the NFT
      */
     function mint(address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType)
-      recipientExists(recipientId)
-      internal returns (uint256 tokenId) {
+        recipientExists(recipientId)
+        internal returns (uint256 tokenId)
+    {
         nftCount++;
 
         nft[nftCount].owner = receiver;

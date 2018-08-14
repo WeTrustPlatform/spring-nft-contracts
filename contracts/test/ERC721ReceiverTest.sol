@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import '../interface/ERC721.sol';
+import "../interface/ERC721.sol";
 contract ERC721ReceiverTest {
 
     address from;

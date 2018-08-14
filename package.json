@@ -7,6 +7,7 @@
     "test": "test"
   },
   "scripts": {
+    "lint": "solium -d contracts/ --fix",
     "test": "truffle test"
   },
   "repository": {
@@ -20,6 +21,7 @@
   },
   "homepage": "https://github.com/WeTrustPlatform/spring-nft-contracts#readme",
   "devDependencies": {
-    "solidity-coverage": "^0.5.7"
+    "solidity-coverage": "^0.5.7",
+    "solium": "^1.1.8"
   }
 }
