@@ -64,4 +64,9 @@ contract('SpringNFT: updateRecipientInfo Unit Tests', function(accounts) {
 
     await springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress})
   });
+
+  it('throws if contract is in paused state', async function() {
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await utils.assertRevert(springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress}))
+  });
 });

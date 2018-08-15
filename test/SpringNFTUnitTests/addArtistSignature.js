@@ -34,4 +34,9 @@ contract('SpringNFT: addArtistSingaure Unit Tests', function(accounts) {
     await springNFTInstance.addArtistSignature(tokenId, artistSignature, {from: wetrustAddress})
     await utils.assertRevert(springNFTInstance.addArtistSignature(tokenId, artistSignature, {from: wetrustAddress}))
   });
+
+  it('throws if contract is in paused state', async function() {
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await utils.assertRevert(springNFTInstance.addArtistSignature(tokenId, artistSignature, {from: wetrustAddress}))
+  });
 });

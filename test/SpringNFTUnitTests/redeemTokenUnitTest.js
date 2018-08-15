@@ -22,11 +22,6 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftType, traits, recipientId, uniqueToken);
     const signature = utils.createSignedMsg([7] /* wetrustAddress */, msgHash.substring(2))
     redeemableToken = message + signature.substring(2)
-
-    // console.log('message', message)
-    // console.log('msgHash', msgHash)
-    // console.log('signature', signature)
-    // console.log('signer', wetrustAddress)
   });
 
   it('checks that proper values were updated', async function() {
@@ -64,6 +59,11 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     const signature = utils.createSignedMsg([5],  msgHash.substring(2))
 
     redeemableToken = message + signature.substring(2)
+    await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
+  });
+
+  it('throws if contract is in paused state', async function() {
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
     await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
   });
 });

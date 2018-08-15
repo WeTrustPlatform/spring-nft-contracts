@@ -43,6 +43,14 @@ contract SpringNFT is NFToken{
         _;
     }
 
+    /**
+     * @dev Guarrentees that contract is not in paused state
+     */
+    modifier onlyWhenNotPaused() {
+        require(!paused, "contract is currently in paused state");
+        _;
+    }
+
     //////////////////////////////
     // Storage Variables
     /////////////////////////////
@@ -51,6 +59,12 @@ contract SpringNFT is NFToken{
      * @dev wetrust Controlled address
      */
     address wetrustAddress;
+
+    /**
+     * @dev if paused is true, suspend most of contract's functionality
+     */
+    bool paused;
+
     /**
      * @dev mapping of recipients from WeTrust Spring platform
      */
@@ -120,7 +134,7 @@ contract SpringNFT is NFToken{
      * - bytes32 traits
      * - bytes4 nftType
      */
-    function batchCreate(bytes nftparams) onlyByWeTrust public returns (bool success) {
+    function batchCreate(bytes nftparams) onlyByWeTrust onlyWhenNotPaused public returns (bool success) {
         uint256 numOfNFT = nftparams.length / 100;
 
         address receiver;
@@ -153,7 +167,7 @@ contract SpringNFT is NFToken{
      * - bytes32 s of Signature
      * - uint8 v of Signature
      */
-    function redeemToken(bytes signedMessage) public returns(uint256 tokenId) {
+    function redeemToken(bytes signedMessage) onlyWhenNotPaused public returns(uint256 tokenId) {
         bytes4 nftType;
         bytes32 traits;
         bytes32 recipientId;
@@ -193,6 +207,7 @@ contract SpringNFT is NFToken{
      */
     function addRecipient(bytes32 recipientId, string name, string url, address owner)
         onlyByWeTrust
+        onlyWhenNotPaused
         recipientDoesNotExists(recipientId)
         public
     {
@@ -210,6 +225,7 @@ contract SpringNFT is NFToken{
      * @param url link to the update
      */
     function addRecipientUpdate(bytes32 recipientId, string url)
+        onlyWhenNotPaused
         recipientExists(recipientId)
         onlyByWeTrustOrRecipient(recipientId)
         public
@@ -226,6 +242,7 @@ contract SpringNFT is NFToken{
      */
     function updateRecipientInfo(bytes32 recipientId, string name, string url, address owner)
         onlyByWeTrust
+        onlyWhenNotPaused
         recipientExists(recipientId)
         public
     {
@@ -241,10 +258,18 @@ contract SpringNFT is NFToken{
      * @param nftId NFT to add the signature to
      * @param artistSignature Artist Signed Message
      */
-    function addArtistSignature(uint256 nftId, bytes artistSignature) onlyByWeTrust public {
+    function addArtistSignature(uint256 nftId, bytes artistSignature) onlyByWeTrust onlyWhenNotPaused public {
         require(nftArtistSignature[nftId].length == 0, "Artist Signature already exist for this token"); // make sure no prior signature exists
 
         nftArtistSignature[nftId] = artistSignature;
+    }
+
+    /**
+     * @dev Set whether or not the contract is paused
+     * @param _paused status to put the contract in
+     */
+    function setPaused(bool _paused) onlyByWeTrust public {
+        paused = _paused;
     }
 
     /**

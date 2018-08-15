@@ -50,4 +50,9 @@ contract('SpringNFT: batchCreate Unit Tests', function(accounts) {
 
     await springNFTInstance.batchCreate(nftParams, {from: wetrustAddress})
   });
+
+  it('throws if contract is in paused state', async function() {
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await utils.assertRevert(springNFTInstance.batchCreate(nftParams, {from: wetrustAddress}))
+  });
 });

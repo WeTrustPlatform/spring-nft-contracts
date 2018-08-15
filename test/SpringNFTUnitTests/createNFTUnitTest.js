@@ -42,4 +42,9 @@ contract('SpringNFT: createNFT Unit Tests', function(accounts) {
     await utils.assertRevert(springNFTInstance.createNFT(nftHolder, '0x2', '0x01', '0x01'))
     await springNFTInstance.createNFT(nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
   });
+
+  it('throws if contract is in paused state', async function() {
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await utils.assertRevert(springNFTInstance.createNFT(nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress}))
+  });
 });

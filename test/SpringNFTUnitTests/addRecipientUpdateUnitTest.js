@@ -38,4 +38,11 @@ contract('SpringNFT: addRecipientUpdate Unit Tests', function(accounts) {
     await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: accounts[2]}))
     await springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: recipientOwner})
   });
+
+  it('throws if contract is in paused state', async function() {
+    const updateString = 'test'
+
+    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: recipientOwner}))
+  });
 });
