@@ -120,7 +120,7 @@ contract SpringNFT is NFToken{
         bytes32 recipientId,
         bytes32 traits,
         bytes4 nftType)
-        onlyByWeTrust public returns (uint256 tokenId)
+        onlyByWeTrust onlyWhenNotPaused public returns (uint256 tokenId)
     {
         return mint(receiver, recipientId, traits, nftType);
     }
