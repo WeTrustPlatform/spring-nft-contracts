@@ -354,7 +354,7 @@ contract SpringNFT is NFToken{
         nft[nftCount].edition = determineEdition(recipients[recipientId].nftCount + 1);
 
         recipients[recipientId].nftCount++;
-        ownerToNFTokenCount[receiver]++;
+        ownerToTokenList[receiver].push(nftCount);
 
         return nftCount;
     }

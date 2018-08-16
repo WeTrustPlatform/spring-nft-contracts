@@ -2,6 +2,7 @@
 
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
+const consts = require('../utils/consts')
 
 let springNFTInstance;
 
@@ -28,6 +29,23 @@ contract('NFToken: transferFrom Unit Test', function(accounts) {
 
     owner = await springNFTInstance.ownerOf.call(tokenId)
     assert.equal(owner, newNFTHolder)
+  });
+
+  it('checks that approval is removed when token is transferred', async function() {
+    const newNFTHolder = accounts[3]
+    let owner = await springNFTInstance.ownerOf.call(tokenId)
+    assert.equal(owner, nftHolder)
+
+    const approvedAddress = accounts[2]
+    await springNFTInstance.approve(approvedAddress, tokenId)
+
+    await springNFTInstance.transferFrom(nftHolder, newNFTHolder, tokenId)
+
+    owner = await springNFTInstance.ownerOf.call(tokenId)
+    assert.equal(owner, newNFTHolder)
+
+    const approved = await springNFTInstance.getApproved.call(tokenId)
+    assert.equal(approved, consts.ZERO_ADDRESS)
   });
 
   it('throw if "to" is zero address', async function() {

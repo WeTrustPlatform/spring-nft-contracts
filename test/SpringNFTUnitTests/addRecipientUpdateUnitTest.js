@@ -24,6 +24,8 @@ contract('SpringNFT: addRecipientUpdate Unit Tests', function(accounts) {
     const updateString = 'test'
     await springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: wetrustAddress})
     let update = await springNFTInstance.recipientUpdates.call(recipientId, 0)
+    let updateCount = await springNFTInstance.getUpdateCount.call(recipientId)
+    assert.equal(updateCount, 1)
     assert.equal(update[0], updateString)
   });
 

@@ -128,7 +128,7 @@ contract NFToken is ERC721, SupportsInterface {
     /**
     * @dev Mapping from owner address to count of his tokens.
     */
-    mapping (address => uint256) internal ownerToNFTokenCount;
+    mapping (address => uint256[]) internal ownerToTokenList;
 
     /**
      * @dev Mapping from owner address to mapping of operator addresses.
@@ -162,7 +162,7 @@ contract NFToken is ERC721, SupportsInterface {
      * @param _owner Address for whom to query the balance.
      */
     function balanceOf(address _owner) onlyNonZeroAddress(_owner) external view returns (uint256) {
-        return ownerToNFTokenCount[_owner];
+        return ownerToTokenList[_owner].length;
     }
 
     /**
@@ -288,6 +288,14 @@ contract NFToken is ERC721, SupportsInterface {
         return ownerToOperators[_owner][_operator];
     }
 
+    /**
+     * @dev return token list of owned by the owner
+     * @param owner The address that owns the NFTs.
+     */
+    function getOwnedTokenList(address owner) view public returns(uint256[] tokenList) {
+        return ownerToTokenList[owner];
+    }
+
     /////////////////////////////
     // Private Functions
     ////////////////////////////
@@ -344,8 +352,17 @@ contract NFToken is ERC721, SupportsInterface {
      */
     function removeNFToken(address _from, uint256 _tokenId) internal {
         require(nft[_tokenId].owner == _from, "from address must be owner of tokenId");
-        assert(ownerToNFTokenCount[_from] > 0);
-        ownerToNFTokenCount[_from] = ownerToNFTokenCount[_from] - 1;
+        uint256[] storage tokenList = ownerToTokenList[_from];
+        assert(tokenList.length > 0);
+
+        for (uint256 i = 0; i < tokenList.length; i++) {
+            if (tokenList[i] == _tokenId) {
+                tokenList[i] = tokenList[tokenList.length - 1];
+                delete tokenList[tokenList.length - 1];
+                tokenList.length--;
+                break;
+            }
+        }
         delete nft[_tokenId].owner;
     }
 
@@ -359,9 +376,8 @@ contract NFToken is ERC721, SupportsInterface {
         noOwnerExists(_tokenId)
         internal
     {
-
         nft[_tokenId].owner = _to;
-        ownerToNFTokenCount[_to]++;
+        ownerToTokenList[_to].push(_tokenId);
         nftCount++;
     }
 
