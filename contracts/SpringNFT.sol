@@ -84,7 +84,7 @@ contract SpringNFT is NFToken{
     mapping (uint256 => bytes) public nftArtistSignature;
 
     struct Update {
-        string url;
+        bytes32 id;
         uint256 createdAt;
     }
 
@@ -222,15 +222,15 @@ contract SpringNFT is NFToken{
     /**
      * @dev Add an link to the update the recipient had made
      * @param recipientId The issuer of the update
-     * @param url link to the update
+     * @param updateId unique id of the update
      */
-    function addRecipientUpdate(bytes32 recipientId, string url)
+    function addRecipientUpdate(bytes32 recipientId, bytes32 updateId)
         onlyWhenNotPaused
         recipientExists(recipientId)
         onlyByWeTrustOrRecipient(recipientId)
         public
     {
-        recipientUpdates[recipientId].push(Update(url, now));
+        recipientUpdates[recipientId].push(Update(updateId, now));
     }
 
     /**

@@ -1,6 +1,7 @@
 'use strict';
 
 const springNFT = artifacts.require('SpringNFT.sol')
+const abi = require('ethereumjs-abi')
 const utils = require('../utils/utils')
 
 let springNFTInstance;
@@ -21,30 +22,30 @@ contract('SpringNFT: addRecipientUpdate Unit Tests', function(accounts) {
   });
 
   it('checks that proper values were updated', async function() {
-    const updateString = 'test'
-    await springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: wetrustAddress})
+    const updateId = '0x'+ abi.rawEncode(['bytes32'], ['0xdeed']).toString('hex')
+    await springNFTInstance.addRecipientUpdate(recipientId, updateId, {from: wetrustAddress})
     let update = await springNFTInstance.recipientUpdates.call(recipientId, 0)
     let updateCount = await springNFTInstance.getUpdateCount.call(recipientId)
     assert.equal(updateCount, 1)
-    assert.equal(update[0], updateString)
+    assert.equal(update[0], updateId)
   });
 
   it('throw if recipient does not exists', async function() {
-    const updateString = 'test'
-    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId + '2', updateString, {from: wetrustAddress}))
-    await springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: wetrustAddress})
+    const updateId = '0xdeed'
+    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId + '2', updateId, {from: wetrustAddress}))
+    await springNFTInstance.addRecipientUpdate(recipientId, updateId, {from: wetrustAddress})
   });
 
   it('throw if msg.sender is not from wetrust or recipient', async function() {
-    const updateString = 'test'
-    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: accounts[2]}))
-    await springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: recipientOwner})
+    const updateId = '0xdeed'
+    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateId, {from: accounts[2]}))
+    await springNFTInstance.addRecipientUpdate(recipientId, updateId, {from: recipientOwner})
   });
 
   it('throws if contract is in paused state', async function() {
-    const updateString = 'test'
+    const updateId = '0xdeed'
 
     await springNFTInstance.setPaused(true, {from: wetrustAddress})
-    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateString, {from: recipientOwner}))
+    await utils.assertRevert(springNFTInstance.addRecipientUpdate(recipientId, updateId, {from: recipientOwner}))
   });
 });
