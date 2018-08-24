@@ -5,7 +5,7 @@ const utils = require('../utils/utils')
 
 let springNFTInstance;
 
-contract('SpringNFT: addArtistSingaure Unit Tests', function(accounts) {
+contract('SpringNFT: addArtistSingature Unit Tests', function(accounts) {
   const artistSignature = '0xdeadbeef' // note, we don't need a real signature since smart contract doesn't validate the signer
   const recipientId = '0x1'
   const nftHolder = accounts[0]
