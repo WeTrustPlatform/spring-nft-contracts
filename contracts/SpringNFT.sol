@@ -58,12 +58,12 @@ contract SpringNFT is NFToken{
     /**
      * @dev wetrust Controlled address
      */
-    address wetrustAddress;
+    address public wetrustAddress;
 
     /**
      * @dev if paused is true, suspend most of contract's functionality
      */
-    bool paused;
+    bool public paused;
 
     /**
      * @dev mapping of recipients from WeTrust Spring platform
@@ -270,6 +270,14 @@ contract SpringNFT is NFToken{
      */
     function setPaused(bool _paused) onlyByWeTrust public {
         paused = _paused;
+    }
+
+    /**
+     * @dev Transfer the ownership of NFT contract to a new address
+     * @param newAddress new WeTrust owned address
+     */
+    function changeWeTrustAddress(address newAddress) onlyWhenNotPaused onlyByWeTrust public {
+        wetrustAddress = newAddress;
     }
 
     /**
