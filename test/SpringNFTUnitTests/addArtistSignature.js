@@ -17,7 +17,7 @@ contract('SpringNFT: addArtistSingature Unit Tests', function(accounts) {
 
     tokenId++;
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
+    await springNFTInstance.createNFT(tokenId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
   });
 
   it('checks that proper values were updated', async function() {

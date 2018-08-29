@@ -9,20 +9,19 @@ contract('NFToken: approve Unit Test', function(accounts) {
   const recipientId = '0x1'
   const nftHolder = accounts[0]
   const nftHolder2 = accounts[2]
-  let tokenId
+  let nftId = 1
 
   const wetrustAddress = accounts[7];
   beforeEach(async function() {
     springNFTInstance = await springNFT.new(wetrustAddress);
 
-    tokenId = 1;
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
+    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
   });
 
   it('checks that proper values are returned', async function() {
-    await springNFTInstance.createNFT(nftHolder2, recipientId, '0x01', '0x01', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
+    await springNFTInstance.createNFT(nftId + 1, nftHolder2, recipientId, '0x01', '0x01', {from: wetrustAddress})
+    await springNFTInstance.createNFT(nftId + 2, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
     let tokenList = await springNFTInstance.getOwnedTokenList(nftHolder)
 
     assert.equal(tokenList.length, 2)

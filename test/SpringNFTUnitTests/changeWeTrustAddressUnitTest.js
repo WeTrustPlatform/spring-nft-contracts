@@ -6,9 +6,6 @@ const utils = require('../utils/utils')
 let springNFTInstance;
 
 contract('SpringNFT: changeWeTrustAddress Unit Tests', function(accounts) {
-  const artistSignature = '0xdeadbeef' // note, we don't need a real signature since smart contract doesn't validate the signer
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
   let tokenId = 0
 
   const wetrustAddress = accounts[7];

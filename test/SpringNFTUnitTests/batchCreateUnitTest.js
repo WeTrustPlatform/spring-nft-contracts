@@ -14,13 +14,14 @@ contract('SpringNFT: batchCreate Unit Tests', function(accounts) {
   const recipientId = '0xbeef'
   const nftType = 'deed0000'
   const nftType2 = '0000dddd'
+  let nftId = 1
   let nftParams
   beforeEach(async function() {
     springNFTInstance = await springNFT.new(wetrustAddress);
 
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    nftParams = '0x' + abi.rawEncode(['address', 'bytes32', 'bytes32'], [receiver, recipientId, traits]).toString('hex') + nftType
-      + abi.rawEncode(['address', 'bytes32', 'bytes32'], [receiver, recipientId, traits2]).toString('hex') + nftType2
+    nftParams = '0x' + abi.rawEncode(['uint256', 'address', 'bytes32', 'bytes32'], [nftId, receiver, recipientId, traits]).toString('hex') + nftType
+      + abi.rawEncode(['uint256', 'address', 'bytes32', 'bytes32'], [nftId + 1, receiver, recipientId, traits2]).toString('hex') + nftType2
   });
 
   it('checks that proper values were updated', async function() {
@@ -28,17 +29,16 @@ contract('SpringNFT: batchCreate Unit Tests', function(accounts) {
     assert.equal(nftCount, 0)
 
     await springNFTInstance.batchCreate(nftParams, {from: wetrustAddress})
-
     nftCount = await springNFTInstance.balanceOf(receiver)
     assert.equal(nftCount, 2)
 
-    const firstNFT = await springNFTInstance.nft(1);
+    const firstNFT = await springNFTInstance.nft(nftId);
     assert.equal(firstNFT[0], receiver) // owner
     assert.equal(firstNFT[2], '0x' + abi.rawEncode(['bytes32'], [traits]).toString('hex')) // traits
     assert.equal(firstNFT[4], '0x' + nftType) // type
     assert.equal(firstNFT[5], '0x' + abi.rawEncode(['bytes32'], [recipientId]).toString('hex')) // recipientId
 
-    const secondNFT = await springNFTInstance.nft(2);
+    const secondNFT = await springNFTInstance.nft(nftId + 1);
     assert.equal(secondNFT[0], receiver) // owner
     assert.equal(secondNFT[2], '0x' + abi.rawEncode(['bytes32'], [traits2]).toString('hex')) // traits
     assert.equal(secondNFT[4], '0x' + nftType2) // type

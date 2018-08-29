@@ -73,10 +73,6 @@ contract SpringNFT is NFToken{
      * @dev mapping to a list of updates made by recipients
      */
     mapping(bytes32 => Update[]) public recipientUpdates;
-    /**
-     * @dev keeps tracks of uniqueToken during redeem process to avoid replay attack
-     */
-    mapping(bytes32 => bool) public redeemedToken;
 
     /**
      * @dev Stores the Artist signed Message who created the NFT
@@ -109,6 +105,7 @@ contract SpringNFT is NFToken{
 
     /**
      * @dev Create a new NFT
+     * @param tokenId create new NFT with this tokenId
      * @param receiver the owner of the new NFT
      * @param recipientId The issuer of the NFT
      * @param traits NFT Traits
@@ -116,27 +113,32 @@ contract SpringNFT is NFToken{
      */
 
     function createNFT(
+        uint256 tokenId,
         address receiver,
         bytes32 recipientId,
         bytes32 traits,
         bytes4 nftType)
-        onlyByWeTrust onlyWhenNotPaused public returns (uint256 tokenId)
+        noOwnerExists(tokenId)
+        onlyByWeTrust
+        onlyWhenNotPaused public
     {
-        return mint(receiver, recipientId, traits, nftType);
+        mint(tokenId, receiver, recipientId, traits, nftType);
     }
 
     /**
      * @dev Allow creation of multiple NFTs in one transaction
      * @param nftparams Parameters of NFTs to be created
      * Note: any number of NFTs can be created, assuming the following parameters for each individual NFT is given
+     * - bytes32 tokenId
      * - address receiver
      * - bytes32 recipientId
      * - bytes32 traits
      * - bytes4 nftType
      */
     function batchCreate(bytes nftparams) onlyByWeTrust onlyWhenNotPaused public returns (bool success) {
-        uint256 numOfNFT = nftparams.length / 100;
+        uint256 numOfNFT = nftparams.length / 132;
 
+        uint256 tokenId;
         address receiver;
         bytes32 recipientId;
         bytes32 traits;
@@ -144,12 +146,13 @@ contract SpringNFT is NFToken{
 
         for (uint256 pos = 0; pos < numOfNFT; pos++) {
             assembly {
-                receiver := mload(add(nftparams, add(32, mul(100,pos))))
-                recipientId := mload(add(nftparams, add(64, mul(100,pos))))
-                traits := mload(add(nftparams, add(96, mul(100,pos))))
-                nftType := mload(add(nftparams, add(128, mul(100,pos))))
+                tokenId := mload(add(nftparams, add(32, mul(132,pos))))
+                receiver := mload(add(nftparams, add(64, mul(132,pos))))
+                recipientId := mload(add(nftparams, add(96, mul(132,pos))))
+                traits := mload(add(nftparams, add(128, mul(132,pos))))
+                nftType := mload(add(nftparams, add(160, mul(132,pos))))
             }
-            createNFT(receiver, recipientId, traits, nftType);
+            createNFT(tokenId, receiver, recipientId, traits, nftType);
         }
 
         return true;
@@ -159,43 +162,43 @@ contract SpringNFT is NFToken{
      * @dev Allows anyone to redeem a token by providing a signed Message from Spring platform
      * @param signedMessage A signed Message containing the NFT parameter from Spring platform
      * The Signed Message must be concatenated in the following format
+     * - uint256 tokenId
      * - bytes4 nftType
      * - bytes32 traits
      * - bytes32 recipientId
-     * - bytes32 uniqueToken
      * - bytes32 r of Signature
      * - bytes32 s of Signature
      * - uint8 v of Signature
      */
-    function redeemToken(bytes signedMessage) onlyWhenNotPaused public returns(uint256 tokenId) {
+    function redeemToken(bytes signedMessage) onlyWhenNotPaused public {
+        uint256 tokenId;
         bytes4 nftType;
         bytes32 traits;
         bytes32 recipientId;
-        bytes32 uniqueToken;
         bytes32 r;
         bytes32 s;
         uint8 v;
 
         assembly {
-            nftType := mload(add(signedMessage, 32)) // first 32 bytes are data padding
-            traits := mload(add(signedMessage, 36))
-            recipientId := mload(add(signedMessage, 68))
-            uniqueToken := mload(add(signedMessage, 100))
+            tokenId := mload(add(signedMessage, 32))
+            nftType := mload(add(signedMessage, 64)) // first 32 bytes are data padding
+            traits := mload(add(signedMessage, 68))
+            recipientId := mload(add(signedMessage, 100))
             r := mload(add(signedMessage, 132))
             s := mload(add(signedMessage, 164))
             v := mload(add(signedMessage, 196))
         }
-        require(!redeemedToken[uniqueToken], "This token has been redeemed already");
+
+        require(nft[tokenId].owner == address(0), "This token has been redeemed already");
         if (v < 27) {
             v += 27;
         }
 
-        bytes32 msgHash = createRedeemMessageHash(nftType, traits, recipientId, uniqueToken);
+        bytes32 msgHash = createRedeemMessageHash(tokenId, nftType, traits, recipientId);
         address signer = ecrecover(msgHash, v, r, s);
 
         require(signer == wetrustAddress, "WeTrust did not authorized this redeem script");
-        redeemedToken[uniqueToken] = true;
-        return mint(msg.sender, recipientId, traits, nftType);
+        return mint(tokenId, msg.sender, recipientId, traits, nftType);
     }
 
     /**
@@ -290,24 +293,24 @@ contract SpringNFT is NFToken{
 
     /**
      * @dev returns the message hash to be signed for redeem token
+     * @param tokenId id of the token to be created
      * @param nftType Type of NFT to be created
      * @param traits Traits of NFT to be created
      * @param recipientId Issuer of the NFT
-     * @param uniqueToken Unique string to avoid using the same message to create multiple NFT
      */
     function createRedeemMessageHash(
+        uint256 tokenId,
         bytes4 nftType,
         bytes32 traits,
-        bytes32 recipientId,
-        bytes32 uniqueToken)
+        bytes32 recipientId)
         pure public returns(bytes32 msgHash)
     {
         return keccak256(
             abi.encodePacked(
+                tokenId,
                 nftType,
                 traits,
-                recipientId,
-                uniqueToken
+                recipientId
             ));
     }
 
@@ -348,22 +351,20 @@ contract SpringNFT is NFToken{
      * @param traits NFT Traits
      * @param nftType Type of the NFT
      */
-    function mint(address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType)
+    function mint(uint256 tokenId, address receiver, bytes32 recipientId, bytes32 traits, bytes4 nftType)
         recipientExists(recipientId)
-        internal returns (uint256 tokenId)
+        internal
     {
-        nftCount++;
-
-        nft[nftCount].owner = receiver;
-        nft[nftCount].traits = traits;
-        nft[nftCount].recipientId = recipientId;
-        nft[nftCount].nftType = nftType;
-        nft[nftCount].createdAt = now;
-        nft[nftCount].edition = determineEdition(recipients[recipientId].nftCount + 1);
+        nft[tokenId].owner = receiver;
+        nft[tokenId].traits = traits;
+        nft[tokenId].recipientId = recipientId;
+        nft[tokenId].nftType = nftType;
+        nft[tokenId].createdAt = now;
+        nft[tokenId].edition = determineEdition(recipients[recipientId].nftCount + 1);
 
         recipients[recipientId].nftCount++;
-        ownerToTokenList[receiver].push(nftCount);
+        ownerToTokenList[receiver].push(tokenId);
 
-        return nftCount;
+        nftCount++;
     }
 }
