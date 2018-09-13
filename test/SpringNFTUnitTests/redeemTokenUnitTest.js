@@ -8,10 +8,10 @@ let springNFTInstance;
 
 contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
   const wetrustAddress = accounts[7]
-  const nftType = '0x01320000'
-  const traits = '0xdead'
-  const recipientId = '0xbeef'
-  let nftId = 1;
+  const nftType = '0x00000000'
+  const traits = '0x01'
+  const recipientId = '0x734923c8cdd99dd68ffdcd69a53161694287c1bd7454fc6696be0ad7c4ce2e9a'
+  let nftId = '123';
   let redeemableToken;
   beforeEach(async function() {
     springNFTInstance = await springNFT.new(wetrustAddress);
@@ -20,7 +20,8 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
 
     const message = '0x' + abi.rawEncode(['uint256'], [nftId]).toString('hex') + nftType.substring(2) + abi.rawEncode(['bytes32', 'bytes32'], [traits, recipientId]).toString('hex')
     const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftId, nftType, traits, recipientId);
-    const signature = utils.createSignedMsg([7] /* wetrustAddress */, msgHash.substring(2))
+    const signature = await web3.eth.sign(accounts[7], msgHash)
+
     redeemableToken = message + signature.substring(2)
   });
 
@@ -30,7 +31,8 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     // first check to see how many NFT redeemer have
     let nftCount = await springNFTInstance.balanceOf(redeemerAddress)
     assert.equal(nftCount, 0)
-    const res = await springNFTInstance.redeemToken(redeemableToken)
+    await springNFTInstance.redeemToken(redeemableToken)
+
 
     nftCount = await springNFTInstance.balanceOf(redeemerAddress)
     assert.equal(nftCount, 1)

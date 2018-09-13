@@ -1,9 +1,17 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.2;
 
 import "./NFToken.sol";
 
 //@dev Implemention of NFT for WeTrust Spring
 contract SpringNFT is NFToken{
+
+
+    //////////////////////////////
+    // Events
+    /////////////////////////////
+    event NFTCreated(address indexed receiver, uint256 indexed tokenId);
+    event RecipientUpdate(bytes32 indexed recipientId, bytes32 updateId);
+
     //////////////////////////////
     // Modifiers
     /////////////////////////////
@@ -177,7 +185,9 @@ contract SpringNFT is NFToken{
         bytes32 recipientId;
         bytes32 r;
         bytes32 s;
+        byte vInByte;
         uint8 v;
+        string memory prefix = "\x19Ethereum Signed Message:\n32";
 
         assembly {
             tokenId := mload(add(signedMessage, 32))
@@ -186,16 +196,22 @@ contract SpringNFT is NFToken{
             recipientId := mload(add(signedMessage, 100))
             r := mload(add(signedMessage, 132))
             s := mload(add(signedMessage, 164))
-            v := mload(add(signedMessage, 196))
+            vInByte := mload(add(signedMessage, 196))
         }
-
-        require(nft[tokenId].owner == address(0), "This token has been redeemed already");
+        v = uint8(vInByte);
         if (v < 27) {
             v += 27;
         }
 
+        require(nft[tokenId].owner == address(0), "This token has been redeemed already");
         bytes32 msgHash = createRedeemMessageHash(tokenId, nftType, traits, recipientId);
-        address signer = ecrecover(msgHash, v, r, s);
+        bytes32 preFixedMsgHash = keccak256(
+            abi.encodePacked(
+                prefix,
+                msgHash
+            ));
+
+        address signer = ecrecover(preFixedMsgHash, v, r, s);
 
         require(signer == wetrustAddress, "WeTrust did not authorized this redeem script");
         return mint(tokenId, msg.sender, recipientId, traits, nftType);
@@ -234,6 +250,7 @@ contract SpringNFT is NFToken{
         public
     {
         recipientUpdates[recipientId].push(Update(updateId, now));
+        emit RecipientUpdate(recipientId, updateId);
     }
 
     /**
@@ -316,8 +333,9 @@ contract SpringNFT is NFToken{
 
     /**
      * @dev Determines the edition of the NFT
-     *      formula used to determine edition:
-     *      f(x) = max(100 + (300 * (x-1)), 5000)
+     *      formula used to determine edition Size given the edition Number:
+     *      f(x) = min(100 + (300 * (x-1)), 5000)
+     * maximum edition possible: 5000
      * @param nextNFTcount to determine edition for
      */
     function determineEdition(uint256 nextNFTcount) pure public returns (uint16 edition) {
@@ -337,6 +355,9 @@ contract SpringNFT is NFToken{
 
             cumulativeEditionSize += currentEditionSize;
             edition++;
+            if (edition >= 5000) {
+                return edition;
+            }
         }
     }
 
@@ -366,5 +387,7 @@ contract SpringNFT is NFToken{
         ownerToTokenList[receiver].push(tokenId);
 
         nftCount++;
+
+        emit NFTCreated(receiver, tokenId);
     }
 }

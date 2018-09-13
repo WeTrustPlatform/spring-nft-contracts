@@ -378,7 +378,6 @@ contract NFToken is ERC721, SupportsInterface {
     {
         nft[_tokenId].owner = _to;
         ownerToTokenList[_to].push(_tokenId);
-        nftCount++;
     }
 
 }
