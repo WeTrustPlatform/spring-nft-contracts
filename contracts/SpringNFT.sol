@@ -35,10 +35,18 @@ contract SpringNFT is NFToken{
     }
 
     /**
-     * @dev Guarrentees that msg.sender is wetrust owned address
+     * @dev Guarrentees that msg.sender is wetrust owned signer address
      */
-    modifier onlyByWeTrust() {
-        require(msg.sender == wetrustAddress, "sender must be from WeTrust Address");
+    modifier onlyByWeTrustSigner() {
+        require(msg.sender == wetrustSigner, "sender must be from WeTrust Signer Address");
+        _;
+    }
+
+    /**
+     * @dev Guarrentees that msg.sender is wetrust owned manager address
+     */
+    modifier onlyByWeTrustManager() {
+        require(msg.sender == wetrustManager, "sender must be from WeTrust Manager Address");
         _;
     }
 
@@ -47,7 +55,7 @@ contract SpringNFT is NFToken{
      * @param id receipientId to check
      */
     modifier onlyByWeTrustOrRecipient(bytes32 id) {
-        require(msg.sender == wetrustAddress || msg.sender == recipients[id].owner, "sender must be from WeTrust or Recipient's owner address");
+        require(msg.sender == wetrustSigner || msg.sender == recipients[id].owner, "sender must be from WeTrust or Recipient's owner address");
         _;
     }
 
@@ -64,9 +72,14 @@ contract SpringNFT is NFToken{
     /////////////////////////////
 
     /**
-     * @dev wetrust Controlled address
+     * @dev wetrust controlled address that is used to create new NFTs
      */
-    address public wetrustAddress;
+    address public wetrustSigner;
+
+    /**
+     *@dev wetrust controlled address that is used to switch the signer address
+     */
+    address public wetrustManager;
 
     /**
      * @dev if paused is true, suspend most of contract's functionality
@@ -105,10 +118,11 @@ contract SpringNFT is NFToken{
     /////////////////////////////
 
     /**
-     * @dev contract constructor, sets msg.sender as wetrustAddress
+     * @dev contract constructor
      */
-    constructor (address WeTrust) NFToken() public {
-        wetrustAddress = WeTrust;
+    constructor (address signer, address manager) NFToken() public {
+        wetrustSigner = signer;
+        wetrustManager = manager;
     }
 
     /**
@@ -127,7 +141,7 @@ contract SpringNFT is NFToken{
         bytes32 traits,
         bytes4 nftType)
         noOwnerExists(tokenId)
-        onlyByWeTrust
+        onlyByWeTrustSigner
         onlyWhenNotPaused public
     {
         mint(tokenId, receiver, recipientId, traits, nftType);
@@ -143,7 +157,7 @@ contract SpringNFT is NFToken{
      * - bytes32 traits
      * - bytes4 nftType
      */
-    function batchCreate(bytes nftparams) onlyByWeTrust onlyWhenNotPaused public returns (bool success) {
+    function batchCreate(bytes nftparams) onlyByWeTrustSigner onlyWhenNotPaused public returns (bool success) {
         uint256 numOfNFT = nftparams.length / 132;
 
         uint256 tokenId;
@@ -213,7 +227,7 @@ contract SpringNFT is NFToken{
 
         address signer = ecrecover(preFixedMsgHash, v, r, s);
 
-        require(signer == wetrustAddress, "WeTrust did not authorized this redeem script");
+        require(signer == wetrustSigner, "WeTrust did not authorized this redeem script");
         return mint(tokenId, msg.sender, recipientId, traits, nftType);
     }
 
@@ -225,7 +239,7 @@ contract SpringNFT is NFToken{
      * @param owner Address owned by the recipient
      */
     function addRecipient(bytes32 recipientId, string name, string url, address owner)
-        onlyByWeTrust
+        onlyByWeTrustSigner
         onlyWhenNotPaused
         recipientDoesNotExists(recipientId)
         public
@@ -261,7 +275,7 @@ contract SpringNFT is NFToken{
      * @param owner new address owned by the recipient
      */
     function updateRecipientInfo(bytes32 recipientId, string name, string url, address owner)
-        onlyByWeTrust
+        onlyByWeTrustSigner
         onlyWhenNotPaused
         recipientExists(recipientId)
         public
@@ -278,7 +292,7 @@ contract SpringNFT is NFToken{
      * @param nftId NFT to add the signature to
      * @param artistSignature Artist Signed Message
      */
-    function addArtistSignature(uint256 nftId, bytes artistSignature) onlyByWeTrust onlyWhenNotPaused public {
+    function addArtistSignature(uint256 nftId, bytes artistSignature) onlyByWeTrustSigner onlyWhenNotPaused public {
         require(nftArtistSignature[nftId].length == 0, "Artist Signature already exist for this token"); // make sure no prior signature exists
 
         nftArtistSignature[nftId] = artistSignature;
@@ -288,7 +302,7 @@ contract SpringNFT is NFToken{
      * @dev Set whether or not the contract is paused
      * @param _paused status to put the contract in
      */
-    function setPaused(bool _paused) onlyByWeTrust public {
+    function setPaused(bool _paused) onlyByWeTrustSigner public {
         paused = _paused;
     }
 
@@ -296,8 +310,8 @@ contract SpringNFT is NFToken{
      * @dev Transfer the ownership of NFT contract to a new address
      * @param newAddress new WeTrust owned address
      */
-    function changeWeTrustAddress(address newAddress) onlyWhenNotPaused onlyByWeTrust public {
-        wetrustAddress = newAddress;
+    function changeWeTrustAddress(address newAddress) onlyWhenNotPaused onlyByWeTrustManager public {
+        wetrustSigner = newAddress;
     }
 
     /**

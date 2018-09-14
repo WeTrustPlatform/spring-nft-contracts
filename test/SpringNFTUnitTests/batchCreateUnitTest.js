@@ -8,6 +8,7 @@ let springNFTInstance;
 
 contract('SpringNFT: batchCreate Unit Tests', function(accounts) {
   const wetrustAddress = accounts[7];
+  const managerAddress = accounts[6];
   const receiver = accounts[2]
   const traits = '0xdead'
   const traits2 = '0xdead2'
@@ -17,7 +18,7 @@ contract('SpringNFT: batchCreate Unit Tests', function(accounts) {
   let nftId = 1
   let nftParams
   beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress);
+    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
 
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
     nftParams = '0x' + abi.rawEncode(['uint256', 'address', 'bytes32', 'bytes32'], [nftId, receiver, recipientId, traits]).toString('hex') + nftType

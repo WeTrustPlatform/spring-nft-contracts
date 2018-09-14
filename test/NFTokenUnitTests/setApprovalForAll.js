@@ -11,8 +11,9 @@ contract('NFToken: setApprovalForAll Unit Test', function(accounts) {
   const nftId = 1
 
   const wetrustAddress = accounts[7];
+  const managerAddress = accounts[6];
   beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress);
+    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
     
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
     await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})

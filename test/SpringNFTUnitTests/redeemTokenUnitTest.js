@@ -8,13 +8,14 @@ let springNFTInstance;
 
 contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
   const wetrustAddress = accounts[7]
+  const managerAddress = accounts[6];
   const nftType = '0x00000000'
   const traits = '0x01'
   const recipientId = '0x734923c8cdd99dd68ffdcd69a53161694287c1bd7454fc6696be0ad7c4ce2e9a'
   let nftId = '123';
   let redeemableToken;
   beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress);
+    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
 
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
 

@@ -12,8 +12,9 @@ contract('SpringNFT: addArtistSingature Unit Tests', function(accounts) {
   let tokenId = 0
 
   const wetrustAddress = accounts[7];
+  const managerAddress = accounts[6];
   beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress);
+    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
 
     tokenId++;
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})

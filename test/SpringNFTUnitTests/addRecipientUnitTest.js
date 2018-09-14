@@ -8,8 +8,9 @@ let springNFTInstance;
 contract('SpringNFT: addRecipient Unit Tests', function(accounts) {
 
   const wetrustAddress = accounts[7];
+  const managerAddress = accounts[6];
   beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress);
+    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
   });
 
   it('checks that proper values were updated', async function() {
