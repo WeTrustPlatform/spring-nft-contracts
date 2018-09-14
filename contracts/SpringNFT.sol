@@ -184,6 +184,7 @@ contract SpringNFT is NFToken{
      * @dev Allows anyone to redeem a token by providing a signed Message from Spring platform
      * @param signedMessage A signed Message containing the NFT parameter from Spring platform
      * The Signed Message must be concatenated in the following format
+     * - address to (the smart contract address)
      * - uint256 tokenId
      * - bytes4 nftType
      * - bytes32 traits
@@ -193,6 +194,7 @@ contract SpringNFT is NFToken{
      * - uint8 v of Signature
      */
     function redeemToken(bytes signedMessage) onlyWhenNotPaused public {
+        address to;
         uint256 tokenId;
         bytes4 nftType;
         bytes32 traits;
@@ -204,21 +206,23 @@ contract SpringNFT is NFToken{
         string memory prefix = "\x19Ethereum Signed Message:\n32";
 
         assembly {
-            tokenId := mload(add(signedMessage, 32))
-            nftType := mload(add(signedMessage, 64)) // first 32 bytes are data padding
-            traits := mload(add(signedMessage, 68))
-            recipientId := mload(add(signedMessage, 100))
-            r := mload(add(signedMessage, 132))
-            s := mload(add(signedMessage, 164))
-            vInByte := mload(add(signedMessage, 196))
+            to := mload(add(signedMessage, 32))
+            tokenId := mload(add(signedMessage, 64))
+            nftType := mload(add(signedMessage, 96)) // first 32 bytes are data padding
+            traits := mload(add(signedMessage, 100))
+            recipientId := mload(add(signedMessage, 132))
+            r := mload(add(signedMessage, 164))
+            s := mload(add(signedMessage, 196))
+            vInByte := mload(add(signedMessage, 228))
         }
+        require(to == address(this), "This signed Message is not meant for this smart contract");
         v = uint8(vInByte);
         if (v < 27) {
             v += 27;
         }
 
         require(nft[tokenId].owner == address(0), "This token has been redeemed already");
-        bytes32 msgHash = createRedeemMessageHash(tokenId, nftType, traits, recipientId);
+        bytes32 msgHash = createRedeemMessageHash(to, tokenId, nftType, traits, recipientId);
         bytes32 preFixedMsgHash = keccak256(
             abi.encodePacked(
                 prefix,
@@ -330,6 +334,7 @@ contract SpringNFT is NFToken{
      * @param recipientId Issuer of the NFT
      */
     function createRedeemMessageHash(
+        address to,
         uint256 tokenId,
         bytes4 nftType,
         bytes32 traits,
@@ -338,6 +343,7 @@ contract SpringNFT is NFToken{
     {
         return keccak256(
             abi.encodePacked(
+                to,
                 tokenId,
                 nftType,
                 traits,
