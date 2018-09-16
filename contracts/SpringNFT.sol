@@ -355,35 +355,38 @@ contract SpringNFT is NFToken{
      * @dev Determines the edition of the NFT
      *      formula used to determine edition Size given the edition Number:
      *      f(x) = min(100 + (300 * (x-1)), 5000)
-     * maximum edition possible: 5000
+     * using equation: f(x) = 150x^2 + 50x if x <= 17
+     * else f(x) = 5000x - f(17)
      * @param nextNFTcount to determine edition for
      */
     function determineEdition(uint256 nextNFTcount) pure public returns (uint16 edition) {
-        uint256 currentEditionSize = 100;
-        uint256 cumulativeEditionSize = 100;
-
-        while (true) {
-            if (nextNFTcount <= cumulativeEditionSize) {
-                return edition;
-            }
-
-            if (currentEditionSize + 300 >= 5000) {
-                currentEditionSize = 5000;
-            } else {
-                currentEditionSize += 300;
-            }
-
-            cumulativeEditionSize += currentEditionSize;
-            edition++;
-            if (edition >= 5000) {
-                return edition;
-            }
+        uint256 output;
+        if (nextNFTcount < 47700) {
+            output = (sqrt(2500 + (600 * nextNFTcount)) + 50) / 300;
+        } else {
+            output = ((nextNFTcount - 47700) / 5000) + 17;
         }
+        edition = uint16(output);
     }
 
     //////////////////////////
     // Private Functions
     /////////////////////////
+
+    /**
+     * @dev Find the Square root of a number
+     * @param x input
+     * Credit goes to: https://ethereum.stackexchange.com/questions/2910/can-i-square-root-in-solidity
+     */
+
+    function sqrt(uint x) pure public returns (uint y) {
+        uint z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
+    }
 
     /**
      * @dev Add the new NFT to the storage
