@@ -1,7 +1,6 @@
 'use strict';
 
 const springNFT = artifacts.require('SpringNFT.sol')
-const utils = require('../utils/utils')
 
 let springNFTInstance;
 
@@ -15,6 +14,9 @@ contract('SpringNFT: determineEdition Unit Tests', function(accounts) {
   it('returns correct editions', async function() {
     let expectedEdition = 0
     let edition = await springNFTInstance.determineEdition.call(1)
+    assert.equal(edition, expectedEdition)
+
+    edition = await springNFTInstance.determineEdition.call(100)
     assert.equal(edition, expectedEdition)
 
     expectedEdition = 1
@@ -31,12 +33,26 @@ contract('SpringNFT: determineEdition Unit Tests', function(accounts) {
   });
 
   it('checks that max edition size is 5000', async function() {
-    let expectedEdition = 17
-    let edition = await springNFTInstance.determineEdition.call(47700)
+    let expectedEdition = 16
+    let edition = await springNFTInstance.determineEdition.call(42500)
     assert.equal(edition, expectedEdition)
 
-    expectedEdition = 18
-    edition = await springNFTInstance.determineEdition.call(53700)
+    expectedEdition = 16
+    edition = await springNFTInstance.determineEdition.call(47499)
+    assert.equal(edition, expectedEdition)
+
+    expectedEdition = 17
+    edition = await springNFTInstance.determineEdition.call(47500)
+    assert.equal(edition, expectedEdition)
+  });
+
+  it('checks that max edition is 5000', async function() {
+    let inputToTest = 987654321;
+    let expectedEdition = 5000
+    let edition = await springNFTInstance.determineEdition.call(inputToTest)
+    assert.equal(edition, expectedEdition)
+
+    edition = await springNFTInstance.determineEdition.call(inputToTest + 5001) // add 5001 because max edition size is 5000
     assert.equal(edition, expectedEdition)
   });
 });

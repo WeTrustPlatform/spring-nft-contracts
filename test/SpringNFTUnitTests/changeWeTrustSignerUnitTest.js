@@ -5,7 +5,7 @@ const utils = require('../utils/utils')
 
 let springNFTInstance;
 
-contract('SpringNFT: changeWeTrustAddress Unit Tests', function(accounts) {
+contract('SpringNFT: changeWeTrustSigner Unit Tests', function(accounts) {
   let tokenId = 0
 
   const wetrustAddress = accounts[7];
@@ -21,7 +21,7 @@ contract('SpringNFT: changeWeTrustAddress Unit Tests', function(accounts) {
     assert.equal(WeTrustAddress, wetrustAddress)
 
     const newWeTrustAddress = accounts[8]
-    await springNFTInstance.changeWeTrustAddress(newWeTrustAddress, {from: managerAddress})
+    await springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress})
 
     WeTrustAddress = await springNFTInstance.wetrustSigner.call();
     assert.equal(WeTrustAddress, newWeTrustAddress)
@@ -29,13 +29,13 @@ contract('SpringNFT: changeWeTrustAddress Unit Tests', function(accounts) {
 
   it('throws if not from WeTrustAddress', async function() {
     const newWeTrustAddress = accounts[8]
-    await utils.assertRevert(springNFTInstance.changeWeTrustAddress(newWeTrustAddress))
-    await springNFTInstance.changeWeTrustAddress(newWeTrustAddress, {from: managerAddress})
+    await utils.assertRevert(springNFTInstance.changeWeTrustSigner(newWeTrustAddress))
+    await springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress})
   });
 
   it('throws if contract is in paused state', async function() {
     const newWeTrustAddress = accounts[8]
     await springNFTInstance.setPaused(true, {from: wetrustAddress})
-    await utils.assertRevert(springNFTInstance.changeWeTrustAddress(newWeTrustAddress, {from: managerAddress}))
+    await utils.assertRevert(springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress}))
   });
 });

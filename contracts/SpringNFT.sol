@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.24;
 
 import "./NFToken.sol";
 
@@ -222,7 +222,7 @@ contract SpringNFT is NFToken{
         }
 
         require(nft[tokenId].owner == address(0), "This token has been redeemed already");
-        bytes32 msgHash = createRedeemMessageHash(to, tokenId, nftType, traits, recipientId);
+        bytes32 msgHash = createRedeemMessageHash(tokenId, nftType, traits, recipientId);
         bytes32 preFixedMsgHash = keccak256(
             abi.encodePacked(
                 prefix,
@@ -311,10 +311,10 @@ contract SpringNFT is NFToken{
     }
 
     /**
-     * @dev Transfer the ownership of NFT contract to a new address
+     * @dev Transfer the WeTrust signer of NFT contract to a new address
      * @param newAddress new WeTrust owned address
      */
-    function changeWeTrustAddress(address newAddress) onlyWhenNotPaused onlyByWeTrustManager public {
+    function changeWeTrustSigner(address newAddress) onlyWhenNotPaused onlyByWeTrustManager public {
         wetrustSigner = newAddress;
     }
 
@@ -334,16 +334,15 @@ contract SpringNFT is NFToken{
      * @param recipientId Issuer of the NFT
      */
     function createRedeemMessageHash(
-        address to,
         uint256 tokenId,
         bytes4 nftType,
         bytes32 traits,
         bytes32 recipientId)
-        pure public returns(bytes32 msgHash)
+        view public returns(bytes32 msgHash)
     {
         return keccak256(
             abi.encodePacked(
-                to,
+                address(this),
                 tokenId,
                 nftType,
                 traits,
@@ -354,19 +353,26 @@ contract SpringNFT is NFToken{
     /**
      * @dev Determines the edition of the NFT
      *      formula used to determine edition Size given the edition Number:
-     *      f(x) = min(100 + (300 * (x-1)), 5000)
-     * using equation: f(x) = 150x^2 + 50x if x <= 17
-     * else f(x) = 5000x - f(17)
+     *      f(x) = min(300x + 100, 5000)
+     * using equation: g(x) = 150x^2 + 50x if x <= 16
+     * else g(x) = 5000x - g(16)
+     * maxEdition = 5000
      * @param nextNFTcount to determine edition for
      */
     function determineEdition(uint256 nextNFTcount) pure public returns (uint16 edition) {
         uint256 output;
-        if (nextNFTcount < 47700) {
-            output = (sqrt(2500 + (600 * nextNFTcount)) + 50) / 300;
+        uint256 valueWhenXisSixteen = 42500; // g(16)
+        if (nextNFTcount < valueWhenXisSixteen) {
+            output = (sqrt(2500 + (600 * (nextNFTcount - 1))) + 50) / 300;
         } else {
-            output = ((nextNFTcount - 47700) / 5000) + 17;
+            output = ((nextNFTcount - valueWhenXisSixteen) / 5000) + 16;
         }
-        edition = uint16(output);
+
+        if (output > 5000) {
+            output = 5000;
+        }
+
+        edition = uint16(output); // we don't have to worry about casting because output will always be less than or equal to 5000
     }
 
     //////////////////////////
@@ -379,7 +385,7 @@ contract SpringNFT is NFToken{
      * Credit goes to: https://ethereum.stackexchange.com/questions/2910/can-i-square-root-in-solidity
      */
 
-    function sqrt(uint x) pure public returns (uint y) {
+    function sqrt(uint x) pure internal returns (uint y) {
         uint z = (x + 1) / 2;
         y = x;
         while (z < y) {
