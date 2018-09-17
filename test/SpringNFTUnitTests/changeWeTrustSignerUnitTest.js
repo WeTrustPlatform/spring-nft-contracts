@@ -35,7 +35,7 @@ contract('SpringNFT: changeWeTrustSigner Unit Tests', function(accounts) {
 
   it('throws if contract is in paused state', async function() {
     const newWeTrustAddress = accounts[8]
-    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await springNFTInstance.setPaused(true, {from: managerAddress})
     await utils.assertRevert(springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress}))
   });
 });

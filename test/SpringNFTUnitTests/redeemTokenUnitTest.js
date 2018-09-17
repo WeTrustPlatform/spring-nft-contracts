@@ -64,7 +64,7 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
   });
 
   it('throws if contract is in paused state', async function() {
-    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await springNFTInstance.setPaused(true, {from: managerAddress})
     await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
   });
 });

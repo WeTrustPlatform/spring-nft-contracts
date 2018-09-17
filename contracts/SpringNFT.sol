@@ -306,7 +306,7 @@ contract SpringNFT is NFToken{
      * @dev Set whether or not the contract is paused
      * @param _paused status to put the contract in
      */
-    function setPaused(bool _paused) onlyByWeTrustSigner public {
+    function setPaused(bool _paused) onlyByWeTrustManager public {
         paused = _paused;
     }
 
