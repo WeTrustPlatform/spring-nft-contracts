@@ -20,7 +20,7 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
 
     const message = '0x' + abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, nftId]).toString('hex') + nftType.substring(2) + abi.rawEncode(['bytes32', 'bytes32'], [traits, recipientId]).toString('hex')
-    const msgHash = await springNFTInstance.createRedeemMessageHash.call(springNFTInstance.address, nftId, nftType, traits, recipientId);
+    const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftId, nftType, traits, recipientId);
     const signature = await web3.eth.sign(accounts[7], msgHash)
 
     redeemableToken = message + signature.substring(2)
@@ -56,7 +56,7 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     await springNFTInstance.redeemToken(redeemableToken)
 
     const message = '0x' + abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, nftId]).toString('hex')  + nftType.substring(2) + abi.rawEncode(['bytes32', 'bytes32'], [traits, recipientId]).toString('hex')
-    const msgHash = await springNFTInstance.createRedeemMessageHash.call(springNFTInstance.address, nftId, nftType, traits, recipientId);
+    const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftId, nftType, traits, recipientId);
     const signature = utils.createSignedMsg([5],  msgHash.substring(2))
 
     redeemableToken = message + signature.substring(2)
@@ -64,7 +64,7 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
   });
 
   it('throws if contract is in paused state', async function() {
-    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await springNFTInstance.setPaused(true, {from: managerAddress})
     await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
   });
 });

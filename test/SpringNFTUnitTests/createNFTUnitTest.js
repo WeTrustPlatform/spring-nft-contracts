@@ -54,7 +54,7 @@ contract('SpringNFT: createNFT Unit Tests', function(accounts) {
 
   it('throws if contract is in paused state', async function() {
     tokenId++;
-    await springNFTInstance.setPaused(true, {from: wetrustAddress})
+    await springNFTInstance.setPaused(true, {from: managerAddress})
     await utils.assertRevert(springNFTInstance.createNFT(tokenId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress}))
   });
 });
