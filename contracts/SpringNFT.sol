@@ -354,14 +354,14 @@ contract SpringNFT is NFToken{
      * @dev Determines the edition of the NFT
      *      formula used to determine edition Size given the edition Number:
      *      f(x) = min(300x + 100, 5000)
-     * using equation: g(x) = 150x^2 + 50x + 1 if x <= 16
-     * else g(x) = 5000x - g(16)
+     * using equation: g(x) = 150x^2 - 50x + 1 if x <= 16
+     * else g(x) = 5000(x-16) - g(16)
      * maxEdition = 5000
      * @param nextNFTcount to determine edition for
      */
     function determineEdition(uint256 nextNFTcount) pure public returns (uint16 edition) {
         uint256 output;
-        uint256 valueWhenXisSixteen = 42500; // g(16)
+        uint256 valueWhenXisSixteen = 37601; // g(16)
         if (nextNFTcount < valueWhenXisSixteen) {
             output = (sqrt(2500 + (600 * (nextNFTcount - 1))) + 50) / 300;
         } else {

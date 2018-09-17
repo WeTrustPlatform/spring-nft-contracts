@@ -33,16 +33,19 @@ contract('SpringNFT: determineEdition Unit Tests', function(accounts) {
   });
 
   it('checks that max edition size is 5000', async function() {
-    let expectedEdition = 16
-    let edition = await springNFTInstance.determineEdition.call(42500)
+    let expectedEdition = 15
+    let edition = await springNFTInstance.determineEdition.call(37600)
     assert.equal(edition, expectedEdition)
 
     expectedEdition = 16
-    edition = await springNFTInstance.determineEdition.call(47499)
+    edition = await springNFTInstance.determineEdition.call(37601)
+    assert.equal(edition, expectedEdition)
+
+    edition = await springNFTInstance.determineEdition.call(42600)
     assert.equal(edition, expectedEdition)
 
     expectedEdition = 17
-    edition = await springNFTInstance.determineEdition.call(47500)
+    edition = await springNFTInstance.determineEdition.call(42601)
     assert.equal(edition, expectedEdition)
   });
 
