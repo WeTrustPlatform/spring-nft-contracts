@@ -17,9 +17,6 @@ contract SupportsInterface {
     public
     {
         supportedInterfaces[0x01ffc9a7] = true; // ERC165
-        supportedInterfaces[0x780e9d63] = true; // ERC721Enumerable
-        supportedInterfaces[0x5b5e139f] = true; // ERC721MetaData
-        supportedInterfaces[0x80ac58cd] = true; // ERC721
     }
 
     /**

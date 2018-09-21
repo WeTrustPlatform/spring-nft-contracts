@@ -170,7 +170,9 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
      * @dev Contract constructor.
      */
     constructor() public {
-        supportedInterfaces[0x80ac58cd] = true;
+        supportedInterfaces[0x780e9d63] = true; // ERC721Enumerable
+        supportedInterfaces[0x5b5e139f] = true; // ERC721MetaData
+        supportedInterfaces[0x80ac58cd] = true; // ERC721
     }
 
     /**
