@@ -120,7 +120,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /**
      * @dev name of the NFT
      */
-    string nftName = "Spring: Nifty Shiba";
+    string nftName = "WeTrust Nifty";
 
     /**
      * @dev NFT symbol
