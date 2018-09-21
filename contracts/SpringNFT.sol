@@ -9,7 +9,6 @@ contract SpringNFT is NFToken{
     //////////////////////////////
     // Events
     /////////////////////////////
-    event NFTCreated(address indexed receiver, uint256 indexed tokenId);
     event RecipientUpdate(bytes32 indexed recipientId, bytes32 updateId);
 
     //////////////////////////////
@@ -441,6 +440,6 @@ contract SpringNFT is NFToken{
 
         nftCount++;
 
-        emit NFTCreated(receiver, tokenId);
+        emit Transfer(address(0), receiver, tokenId);
     }
 }

@@ -45,6 +45,14 @@ contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
     assert.equal(token[5], '0x' + abi.rawEncode(['bytes32'], [recipientId]).toString('hex'))
   });
 
+  it('checks that Transfer event is emitted', async function() {
+    const res = await springNFTInstance.redeemToken(redeemableToken)
+    assert.equal(res.logs[0].event, 'Transfer')
+    assert.equal(res.logs[0].args._from, '0x0000000000000000000000000000000000000000')
+    assert.equal(res.logs[0].args._to, '0x627306090abab3a6e1400e9345bc60c78a8bef57')
+    assert.equal(res.logs[0].args._tokenId.toNumber(), '123')
+  });
+
   it('throw if redeem script is used more than once', async function() {
     await springNFTInstance.redeemToken(redeemableToken)
 
