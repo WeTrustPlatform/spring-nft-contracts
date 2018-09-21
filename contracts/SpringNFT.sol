@@ -125,61 +125,6 @@ contract SpringNFT is NFToken{
     }
 
     /**
-     * @dev Create a new NFT
-     * @param tokenId create new NFT with this tokenId
-     * @param receiver the owner of the new NFT
-     * @param recipientId The issuer of the NFT
-     * @param traits NFT Traits
-     * @param nftType Type of the NFT
-     */
-
-    function createNFT(
-        uint256 tokenId,
-        address receiver,
-        bytes32 recipientId,
-        bytes32 traits,
-        bytes4 nftType)
-        noOwnerExists(tokenId)
-        onlyByWeTrustSigner
-        onlyWhenNotPaused public
-    {
-        mint(tokenId, receiver, recipientId, traits, nftType);
-    }
-
-    /**
-     * @dev Allow creation of multiple NFTs in one transaction
-     * @param nftparams Parameters of NFTs to be created
-     * Note: any number of NFTs can be created, assuming the following parameters for each individual NFT is given
-     * - bytes32 tokenId
-     * - address receiver
-     * - bytes32 recipientId
-     * - bytes32 traits
-     * - bytes4 nftType
-     */
-    function batchCreate(bytes nftparams) onlyByWeTrustSigner onlyWhenNotPaused public returns (bool success) {
-        uint256 numOfNFT = nftparams.length / 132;
-
-        uint256 tokenId;
-        address receiver;
-        bytes32 recipientId;
-        bytes32 traits;
-        bytes4 nftType;
-
-        for (uint256 pos = 0; pos < numOfNFT; pos++) {
-            assembly {
-                tokenId := mload(add(nftparams, add(32, mul(132,pos))))
-                receiver := mload(add(nftparams, add(64, mul(132,pos))))
-                recipientId := mload(add(nftparams, add(96, mul(132,pos))))
-                traits := mload(add(nftparams, add(128, mul(132,pos))))
-                nftType := mload(add(nftparams, add(160, mul(132,pos))))
-            }
-            createNFT(tokenId, receiver, recipientId, traits, nftType);
-        }
-
-        return true;
-    }
-
-    /**
      * @dev Allows anyone to redeem a token by providing a signed Message from Spring platform
      * @param signedMessage A signed Message containing the NFT parameter from Spring platform
      * The Signed Message must be concatenated in the following format
@@ -378,26 +323,11 @@ contract SpringNFT is NFToken{
      * @dev set new host name for this nft contract
      * @param newHostName new host name to use
      */
-    function setHostName(string newHostName) onlyByWeTrustManager external {
+    function setNFTContractInfo(string newHostName, string newName, string newSymbol) onlyByWeTrustManager external {
         hostname = newHostName;
-    }
-
-    /**
-     * @dev set new Name of this NFT contract
-     * @param newName new NFT name
-     */
-    function setName(string newName) onlyByWeTrustManager external {
         nftName = newName;
-    }
-
-    /**
-     * @dev set new Symbol of this NFT contract
-     * @param newSymbol new NFT symbol
-     */
-    function setSymbol(string newSymbol) onlyByWeTrustManager external {
         nftSymbol = newSymbol;
     }
-
     //////////////////////////
     // Private Functions
     /////////////////////////
