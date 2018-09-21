@@ -9,7 +9,6 @@ contract SpringNFT is NFToken{
     //////////////////////////////
     // Events
     /////////////////////////////
-    event NFTCreated(address indexed receiver, uint256 indexed tokenId);
     event RecipientUpdate(bytes32 indexed recipientId, bytes32 updateId);
 
     //////////////////////////////
@@ -375,6 +374,30 @@ contract SpringNFT is NFToken{
         edition = uint16(output); // we don't have to worry about casting because output will always be less than or equal to 5000
     }
 
+    /**
+     * @dev set new host name for this nft contract
+     * @param newHostName new host name to use
+     */
+    function setHostName(string newHostName) onlyByWeTrustManager external {
+        hostname = newHostName;
+    }
+
+    /**
+     * @dev set new Name of this NFT contract
+     * @param newName new NFT name
+     */
+    function setName(string newName) onlyByWeTrustManager external {
+        nftName = newName;
+    }
+
+    /**
+     * @dev set new Symbol of this NFT contract
+     * @param newSymbol new NFT symbol
+     */
+    function setSymbol(string newSymbol) onlyByWeTrustManager external {
+        nftSymbol = newSymbol;
+    }
+
     //////////////////////////
     // Private Functions
     /////////////////////////
@@ -415,8 +438,8 @@ contract SpringNFT is NFToken{
         recipients[recipientId].nftCount++;
         ownerToTokenList[receiver].push(tokenId);
 
-        nftCount++;
+        nftList.push(tokenId);
 
-        emit NFTCreated(receiver, tokenId);
+        emit Transfer(address(0), receiver, tokenId);
     }
 }

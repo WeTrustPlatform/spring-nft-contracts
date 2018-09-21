@@ -29,6 +29,21 @@ contract('NFToken: balanceOf Unit Test', function(accounts) {
     assert.equal(balance, 2)
   });
 
+  it('checks owner balance change appropriately when transferred', async function() {
+    let ownerBalance = await springNFTInstance.balanceOf(nftHolder)
+    assert.equal(ownerBalance, 1)
+
+    const newNFTHolder = accounts[3]
+
+    await springNFTInstance.transferFrom(nftHolder, newNFTHolder, nftId)
+    ownerBalance = await springNFTInstance.balanceOf(nftHolder)
+    assert.equal(ownerBalance, 0)
+
+
+    const newOwnerBalance = await springNFTInstance.balanceOf(newNFTHolder)
+    assert.equal(newOwnerBalance, 1)
+  });
+
   it('throws if zero address is given', async function() {
     await utils.assertRevert(springNFTInstance.balanceOf.call('0x0'))
 

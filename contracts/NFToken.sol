@@ -2,13 +2,15 @@ pragma solidity ^0.4.24;
 
 import "./interface/ERC721.sol";
 import "./interface/ERC721TokenReceiver.sol";
+import "./interface/ERC721MetaData.sol";
+import "./interface/ERC721Enumeration.sol";
 import "./interface/SupportsInterface.sol";
 import "./utils/AddressUtils.sol";
 
 /**
  * @dev Implementation of ERC-721 non-fungible token standard specifically for WeTrust Spring.
  */
-contract NFToken is ERC721, SupportsInterface {
+contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable {
     using AddressUtils for address;
 
     ///////////////////////////
@@ -116,14 +118,29 @@ contract NFToken is ERC721, SupportsInterface {
     //////////////////////////
 
     /**
+     * @dev name of the NFT
+     */
+    string nftName = "WeTrust Nifty";
+
+    /**
+     * @dev NFT symbol
+     */
+    string nftSymbol = "SPRN";
+
+    /**
+     * @dev hostname to be used as base for tokenURI
+     */
+    string public hostname = "https://spring.wetrust.io/shiba/";
+
+    /**
      * @dev A mapping from NFT ID to the address that owns it.
      */
     mapping (uint256 => NFT) public nft;
 
     /**
-     * @dev Number of total NFT, used to determine the next ID during creation of new NFT
+     * @dev List of NFTs
      */
-    uint256 nftCount;
+    uint256[] nftList;
 
     /**
     * @dev Mapping from owner address to count of his tokens.
@@ -153,7 +170,9 @@ contract NFToken is ERC721, SupportsInterface {
      * @dev Contract constructor.
      */
     constructor() public {
-        supportedInterfaces[0x80ac58cd] = true;
+        supportedInterfaces[0x780e9d63] = true; // ERC721Enumerable
+        supportedInterfaces[0x5b5e139f] = true; // ERC721MetaData
+        supportedInterfaces[0x80ac58cd] = true; // ERC721
     }
 
     /**
@@ -161,7 +180,7 @@ contract NFToken is ERC721, SupportsInterface {
      * considered invalid, and this function throws for queries about the zero address.
      * @param _owner Address for whom to query the balance.
      */
-    function balanceOf(address _owner) onlyNonZeroAddress(_owner) external view returns (uint256) {
+    function balanceOf(address _owner) onlyNonZeroAddress(_owner) public view returns (uint256) {
         return ownerToTokenList[_owner].length;
     }
 
@@ -296,9 +315,84 @@ contract NFToken is ERC721, SupportsInterface {
         return ownerToTokenList[owner];
     }
 
+    /// @notice A descriptive name for a collection of NFTs in this contract
+    function name() external view returns (string _name) {
+        return nftName;
+    }
+
+    /// @notice An abbreviated name for NFTs in this contract
+    function symbol() external view returns (string _symbol) {
+        return nftSymbol;
+    }
+
+    /// @notice A distinct Uniform Resource Identifier (URI) for a given asset.
+    /// @dev Throws if `_tokenId` is not a valid NFT. URIs are defined in RFC
+    ///  3986. The URI may point to a JSON file that conforms to the "ERC721
+    ///  Metadata JSON Schema".
+    function tokenURI(uint256 _tokenId) external view returns (string) {
+        return appendUintToString(hostname, _tokenId);
+    }
+
+    /// @notice Count NFTs tracked by this contract
+    /// @return A count of valid NFTs tracked by this contract, where each one of
+    ///  them has an assigned and queryable owner not equal to the zero address
+    function totalSupply() external view returns (uint256) {
+        return nftList.length;
+    }
+
+    /// @notice Enumerate valid NFTs
+    /// @dev Throws if `_index` >= `totalSupply()`.
+    /// @param _index A counter less than `totalSupply()`
+    /// @return The token identifier for the `_index`th NFT,
+    ///  (sort order not specified)
+    function tokenByIndex(uint256 _index) external view returns (uint256) {
+        require(_index < nftList.length, "index out of range");
+        return nftList[_index];
+    }
+
+    /// @notice Enumerate NFTs assigned to an owner
+    /// @dev Throws if `_index` >= `balanceOf(_owner)` or if
+    ///  `_owner` is the zero address, representing invalid NFTs.
+    /// @param _owner An address where we are interested in NFTs owned by them
+    /// @param _index A counter less than `balanceOf(_owner)`
+    /// @return The token identifier for the `_index`th NFT assigned to `_owner`,
+    ///   (sort order not specified)
+    function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
+        require(_index < balanceOf(_owner), "index out of range");
+        return ownerToTokenList[_owner][_index];
+    }
+
     /////////////////////////////
     // Private Functions
     ////////////////////////////
+
+    /**
+     * @dev append uint to the end of string
+     * @param inStr input string
+     * @param v uint value v
+     * credit goes to : https://ethereum.stackexchange.com/questions/10811/solidity-concatenate-uint-into-a-string
+     */
+
+    function appendUintToString(string inStr, uint v) pure internal returns (string str) {
+        uint maxlength = 100;
+        bytes memory reversed = new bytes(maxlength);
+        uint i = 0;
+        while (v != 0) {
+            uint remainder = v % 10;
+            v = v / 10;
+            reversed[i++] = byte(48 + remainder);
+        }
+        bytes memory inStrb = bytes(inStr);
+        bytes memory s = new bytes(inStrb.length + i);
+        uint j;
+        for (j = 0; j < inStrb.length; j++) {
+            s[j] = inStrb[j];
+        }
+        for (j = 0; j < i; j++) {
+            s[j + inStrb.length] = reversed[i - 1 - j];
+        }
+        str = string(s);
+    }
 
     /**
      * @dev Actually preforms the transfer.
