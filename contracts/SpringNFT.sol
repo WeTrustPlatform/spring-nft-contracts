@@ -125,6 +125,28 @@ contract SpringNFT is NFToken{
     }
 
     /**
+     * @dev Create a new NFT
+     * @param tokenId create new NFT with this tokenId
+     * @param receiver the owner of the new NFT
+     * @param recipientId The issuer of the NFT
+     * @param traits NFT Traits
+     * @param nftType Type of the NFT
+     */
+
+    function createNFT(
+        uint256 tokenId,
+        address receiver,
+        bytes32 recipientId,
+        bytes32 traits,
+        bytes4 nftType)
+        noOwnerExists(tokenId)
+        onlyByWeTrustSigner
+        onlyWhenNotPaused public
+    {
+        mint(tokenId, receiver, recipientId, traits, nftType);
+    }
+
+    /**
      * @dev Allows anyone to redeem a token by providing a signed Message from Spring platform
      * @param signedMessage A signed Message containing the NFT parameter from Spring platform
      * The Signed Message must be concatenated in the following format
