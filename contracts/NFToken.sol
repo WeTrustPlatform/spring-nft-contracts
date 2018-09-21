@@ -344,7 +344,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /// @return The token identifier for the `_index`th NFT,
     ///  (sort order not specified)
     function tokenByIndex(uint256 _index) external view returns (uint256) {
-        require(_index < nftList.length);
+        require(_index < nftList.length, "index out of range");
         return nftList[_index];
     }
 
@@ -356,7 +356,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /// @return The token identifier for the `_index`th NFT assigned to `_owner`,
     ///   (sort order not specified)
     function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
-        require(_index < balanceOf(_owner));
+        require(_index < balanceOf(_owner), "index out of range");
         return ownerToTokenList[_owner][_index];
     }
 

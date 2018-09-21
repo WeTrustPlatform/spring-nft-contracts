@@ -22,7 +22,7 @@ contract('SpringNFT: setName Unit Tests', function(accounts) {
 
   it('checks that proper values were updated', async function() {
     let name = await springNFTInstance.name.call()
-    assert.equal(name, 'Spring: Nifty Shiba')
+    assert.equal(name, 'WeTrust Nifty')
 
     const nameToTest = 'new name'
     await springNFTInstance.setName(nameToTest, {from: managerAddress})
