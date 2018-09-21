@@ -138,7 +138,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     mapping (uint256 => NFT) public nft;
 
     /**
-     * @dev Number of total NFT
+     * @dev List of NFTs
      */
     uint256[] nftList;
 
@@ -178,7 +178,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
      * considered invalid, and this function throws for queries about the zero address.
      * @param _owner Address for whom to query the balance.
      */
-    function balanceOf(address _owner) onlyNonZeroAddress(_owner) external view returns (uint256) {
+    function balanceOf(address _owner) onlyNonZeroAddress(_owner) public view returns (uint256) {
         return ownerToTokenList[_owner].length;
     }
 
@@ -344,6 +344,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /// @return The token identifier for the `_index`th NFT,
     ///  (sort order not specified)
     function tokenByIndex(uint256 _index) external view returns (uint256) {
+        require(_index < nftList.length);
         return nftList[_index];
     }
 
@@ -355,6 +356,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /// @return The token identifier for the `_index`th NFT assigned to `_owner`,
     ///   (sort order not specified)
     function tokenOfOwnerByIndex(address _owner, uint256 _index) external view returns (uint256) {
+        require(_index < balanceOf(_owner));
         return ownerToTokenList[_owner][_index];
     }
 

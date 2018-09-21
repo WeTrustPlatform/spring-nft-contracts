@@ -21,6 +21,9 @@ contract('NFToken: transferFrom Unit Test', function(accounts) {
   });
 
   it('checks that proper values were updated', async function() {
+    let totalSupply = await springNFTInstance.totalSupply.call()
+    assert.equal(totalSupply, 1)
+
     const newNFTHolder = accounts[3]
     let owner = await springNFTInstance.ownerOf.call(nftId)
     assert.equal(owner, nftHolder)
@@ -29,6 +32,9 @@ contract('NFToken: transferFrom Unit Test', function(accounts) {
 
     owner = await springNFTInstance.ownerOf.call(nftId)
     assert.equal(owner, newNFTHolder)
+
+    totalSupply = await springNFTInstance.totalSupply.call()
+    assert.equal(totalSupply, 1)
   });
 
   it('checks that approval is removed when token is transferred', async function() {
