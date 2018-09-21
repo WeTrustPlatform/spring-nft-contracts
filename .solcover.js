@@ -8,6 +8,7 @@ module.exports = {
     'interface/ERC721TokenReceiver.sol',
     'interface/SupportsInterface.sol',
     'test/ERC721ReceiverTest.sol',
+    'test/ERC165Query.sol',
     'utils/AddressUtils.sol'
   ]
 };
