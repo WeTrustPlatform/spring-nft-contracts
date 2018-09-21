@@ -2,13 +2,14 @@ pragma solidity ^0.4.24;
 
 import "./interface/ERC721.sol";
 import "./interface/ERC721TokenReceiver.sol";
+import "./interface/ERC721MetaData.sol";
 import "./interface/SupportsInterface.sol";
 import "./utils/AddressUtils.sol";
 
 /**
  * @dev Implementation of ERC-721 non-fungible token standard specifically for WeTrust Spring.
  */
-contract NFToken is ERC721, SupportsInterface {
+contract NFToken is ERC721, SupportsInterface, ERC721Metadata {
     using AddressUtils for address;
 
     ///////////////////////////
@@ -114,6 +115,21 @@ contract NFToken is ERC721, SupportsInterface {
     ///////////////////////////
     // Storage Variable
     //////////////////////////
+
+    /**
+     * @dev name of the NFT
+     */
+    string nftName = "Spring: Nifty Shiba";
+
+    /**
+     * @dev NFT symbol
+     */
+    string nftSymbol = "SPRN";
+
+    /**
+     * @dev hostname to be used as base for tokenURI
+     */
+    string hostname = "https://spring.wetrust.io/shiba/";
 
     /**
      * @dev A mapping from NFT ID to the address that owns it.
@@ -296,9 +312,55 @@ contract NFToken is ERC721, SupportsInterface {
         return ownerToTokenList[owner];
     }
 
+    /// @notice A descriptive name for a collection of NFTs in this contract
+    function name() external view returns (string _name) {
+        return nftName;
+    }
+
+    /// @notice An abbreviated name for NFTs in this contract
+    function symbol() external view returns (string _symbol) {
+        return nftSymbol;
+    }
+
+    /// @notice A distinct Uniform Resource Identifier (URI) for a given asset.
+    /// @dev Throws if `_tokenId` is not a valid NFT. URIs are defined in RFC
+    ///  3986. The URI may point to a JSON file that conforms to the "ERC721
+    ///  Metadata JSON Schema".
+    function tokenURI(uint256 _tokenId) external view returns (string) {
+        return appendUintToString(hostname, _tokenId);
+    }
+
     /////////////////////////////
     // Private Functions
     ////////////////////////////
+
+    /**
+     * @dev append uint to the end of string
+     * @param inStr input string
+     * @param v uint value v
+     * credit goes to : https://ethereum.stackexchange.com/questions/10811/solidity-concatenate-uint-into-a-string
+     */
+
+    function appendUintToString(string inStr, uint v) pure internal returns (string str) {
+        uint maxlength = 100;
+        bytes memory reversed = new bytes(maxlength);
+        uint i = 0;
+        while (v != 0) {
+            uint remainder = v % 10;
+            v = v / 10;
+            reversed[i++] = byte(48 + remainder);
+        }
+        bytes memory inStrb = bytes(inStr);
+        bytes memory s = new bytes(inStrb.length + i);
+        uint j;
+        for (j = 0; j < inStrb.length; j++) {
+            s[j] = inStrb[j];
+        }
+        for (j = 0; j < i; j++) {
+            s[j + inStrb.length] = reversed[i - 1 - j];
+        }
+        str = string(s);
+    }
 
     /**
      * @dev Actually preforms the transfer.
