@@ -130,7 +130,7 @@ contract NFToken is ERC721, SupportsInterface, ERC721Metadata, ERC721Enumerable 
     /**
      * @dev hostname to be used as base for tokenURI
      */
-    string hostname = "https://spring.wetrust.io/shiba/";
+    string public hostname = "https://spring.wetrust.io/shiba/";
 
     /**
      * @dev A mapping from NFT ID to the address that owns it.
