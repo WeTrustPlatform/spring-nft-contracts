@@ -438,7 +438,7 @@ contract SpringNFT is NFToken{
         recipients[recipientId].nftCount++;
         ownerToTokenList[receiver].push(tokenId);
 
-        nftCount++;
+        nftList.push(tokenId);
 
         emit Transfer(address(0), receiver, tokenId);
     }
