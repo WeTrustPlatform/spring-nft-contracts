@@ -1,4 +1,5 @@
 import NFTTokenContract from './nft-token-contract'
+import { TransactionOptions } from "./contracts";
 
 export interface SpringNFTContract extends NFTTokenContract {
   addRecipient(
@@ -6,7 +7,7 @@ export interface SpringNFTContract extends NFTTokenContract {
     name: string,
     url: string,
     owner: string,
-    options: object
+    options?: TransactionOptions
   ): Promise<void>;
 
   createNFT(
@@ -15,6 +16,6 @@ export interface SpringNFTContract extends NFTTokenContract {
     recipientId: string,
     traits: string,
     nftType: string,
-    options: object
+    options?: TransactionOptions
   ): Promise<number>;
 }
