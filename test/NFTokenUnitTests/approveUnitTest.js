@@ -9,7 +9,7 @@ contract('NFToken: approve Unit Test', function (accounts) {
   const RECIPIENT_URL = 'recipient url'
   const RECIPIENT_ADDRESS = '0x2'
 
-  const NFT_OWNER = accounts[0] // signing address by default in unit test transactions
+  const NFT_OWNER = accounts[0] // by default, accounts[0] is the paying address for all transactions
   const NFT_ID = 1
   const NFT_TRAITS = '0x01'
   const NFT_TYPE = '0x01'
