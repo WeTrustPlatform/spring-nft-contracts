@@ -1,5 +1,6 @@
 'use strict'
 
+const assert = require('assert')
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 

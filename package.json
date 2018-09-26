@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/WeTrustPlatform/spring-nft-contracts#readme",
   "devDependencies": {
+    "@types/chai": "^4.1.5",
+    "@types/mocha": "^5.2.5",
     "solidity-coverage": "^0.5.7",
     "solium": "^1.1.8"
   },
