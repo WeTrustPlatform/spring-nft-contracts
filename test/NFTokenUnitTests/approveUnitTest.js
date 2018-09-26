@@ -1,10 +1,10 @@
 'use strict'
 
-const assert = require('assert')
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-contract('NFToken: approve Unit Test', function (accounts) {
+contract('NFToken: approve Unit Test', (accounts) => {
   const RECIPIENT_ID = '0x1'
   const RECIPIENT_NAME = 'recipient name'
   const RECIPIENT_URL = 'recipient url'
