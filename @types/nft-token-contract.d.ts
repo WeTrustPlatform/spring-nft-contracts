@@ -11,6 +11,8 @@ export interface NFTTokenContract extends ContractInstance {
 
   getApproved(tokenId: number): Promise<string>
 
+  getOwnedTokenList(owner: string): Promise<number[]>
+
   transferFrom(
     fromAddress: string,
     toAddress: string,
