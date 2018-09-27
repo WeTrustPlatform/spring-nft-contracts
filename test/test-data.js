@@ -12,7 +12,3 @@ module.exports = {
   NON_EXISTENT_NFT_ID: 1,
   NON_EXISTENT_ADDRESS: '0x0'
 }
-
-
-
-
