@@ -1,36 +1,43 @@
-'use strict';
+'use strict'
 
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('NFToken: getApproved Unit Test', (accounts) => {
+  const RECIPIENT_ID = '0x1'
+  const RECIPIENT_NAME = 'recipient name'
+  const RECIPIENT_URL = 'recipient url'
+  const RECIPIENT_ADDRESS = '0x2'
 
-contract('NFToken: getApproved Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  let nftId = 1
+  const NFT_OWNER = accounts[0]
+  const NFT_ID = 1
+  const NFT_TRAITS = '0x01'
+  const NFT_TYPE = '0x01'
+  const NON_EXISTENT_NFT_ID = 2
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  const MANAGER_ADDRESS = accounts[7]
+  const SIGNER_ADDRESS = accounts[6]
+  const NFT_APPROVED_ADDRESS = accounts[2]
 
-    nftId = 1;
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-  });
+  let springNFTInstance
 
-  it('returns correct approved address', async function() {
-    const approvedAddress = accounts[2]
-    await springNFTInstance.approve(approvedAddress, nftId)
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    const approved = await springNFTInstance.getApproved.call(nftId)
-    assert.equal(approved, approvedAddress)
-  });
+    await springNFTInstance.addRecipient(
+      RECIPIENT_ID, RECIPIENT_NAME, RECIPIENT_URL, RECIPIENT_ADDRESS, { from: SIGNER_ADDRESS })
+    await springNFTInstance.createNFT(
+      NFT_ID, NFT_OWNER, RECIPIENT_ID, NFT_TRAITS, NFT_TYPE, { from: SIGNER_ADDRESS })
+  })
 
-  it('throws if owner doesnt exists', async function() {
-    await utils.assertRevert(springNFTInstance.getApproved.call(nftId + 1))
+  it('returns correct approved address', async () => {
+    await springNFTInstance.approve(NFT_APPROVED_ADDRESS, NFT_ID, { from: NFT_OWNER })
 
-    await springNFTInstance.getApproved.call(nftId)
-  });
-});
+    assert.equal(await springNFTInstance.getApproved.call(NFT_ID), NFT_APPROVED_ADDRESS)
+  })
+
+  it('throws if owner does not exist', async () => {
+    await utils.assertRevert(springNFTInstance.getApproved.call(NON_EXISTENT_NFT_ID))
+  })
+})
