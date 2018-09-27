@@ -1,45 +1,35 @@
-'use strict';
+'use strict'
 
+const { NON_EXISTENT_ADDRESS } = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('NFToken: isApprovedForAll Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const OWNER_ADDRESS = accounts[0]
+  const OPERATOR_ADDRESS = accounts[2]
 
-contract('NFToken: isApprovedForAll Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  const operatorToTest = accounts[2]
-  let nftId = 1
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
+    await springNFTInstance.setApprovalForAll(OPERATOR_ADDRESS, true, { from: OWNER_ADDRESS })
+  })
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-    await springNFTInstance.setApprovalForAll(operatorToTest, true, {from: nftHolder})
+  it('returns true that operator is indeed approved', async () => {
+    assert.isTrue(await springNFTInstance.isApprovedForAll.call(OWNER_ADDRESS, OPERATOR_ADDRESS))
+  })
 
-  });
+  it('throws if owner address does not exist', async () => {
+    await utils.assertRevert(
+      springNFTInstance.isApprovedForAll.call(OWNER_ADDRESS, NON_EXISTENT_ADDRESS))
+  })
 
-  it('returns correct operator', async function() {
-    const operator = await springNFTInstance.isApprovedForAll.call(nftHolder, operatorToTest)
-
-    assert.equal(operator, true)
-  });
-
-  it('throws if owner is zero address', async function() {
-    await utils.assertRevert(springNFTInstance.isApprovedForAll.call(nftHolder, '0x0'))
-    const operator = await springNFTInstance.isApprovedForAll.call(nftHolder, operatorToTest)
-
-    assert.equal(operator, true)
-
-  });
-
-  it('throws if operator is zero address', async function() {
-    await utils.assertRevert(springNFTInstance.isApprovedForAll.call('0x0', operatorToTest))
-    const operator = await springNFTInstance.isApprovedForAll.call(nftHolder, operatorToTest)
-
-    assert.equal(operator, true)
-  });
-});
+  it('throws if operator address does not exist', async () => {
+    await utils.assertRevert(
+      springNFTInstance.isApprovedForAll.call(NON_EXISTENT_ADDRESS, OPERATOR_ADDRESS))
+  })
+})

@@ -13,6 +13,10 @@ export interface NFTTokenContract extends ContractInstance {
 
   getOwnedTokenList(owner: string): Promise<number[]>
 
+  isApprovedForAll(owner: string, operator: string): Promise<boolean>
+
+  setApprovalForAll(operator: string, approved: boolean, options?: TransactionOptions): Promise<void>
+
   transferFrom(
     fromAddress: string,
     toAddress: string,
