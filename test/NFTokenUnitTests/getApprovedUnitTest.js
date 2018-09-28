@@ -34,13 +34,13 @@ contract('NFToken: getApproved Unit Test', (accounts) => {
       { from: SIGNER_ADDRESS })
   })
 
-  it('returns correct approved address', async () => {
+  it('returns correct approved address after being approved token id', async () => {
     await springNFTInstance.approve(APPROVED_ADDRESS, NFT_A_ID, { from: OWNER_ADDRESS })
 
     assert.equal(await springNFTInstance.getApproved.call(NFT_A_ID), APPROVED_ADDRESS)
   })
 
-  it('throws if owner does not exist', async () => {
+  it('throws if owner of token id does not exist', async () => {
     await utils.assertRevert(springNFTInstance.getApproved.call(NON_EXISTENT_NFT_ID))
   })
 })

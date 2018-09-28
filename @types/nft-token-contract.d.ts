@@ -17,7 +17,18 @@ export interface NFTTokenContract extends ContractInstance {
 
   ownerOf(tokenId: number): Promise<string>
 
-  setApprovalForAll(operator: string, approved: boolean, options?: TransactionOptions): Promise<void>
+  setApprovalForAll(
+    operator: string,
+    approved: boolean,
+    options?: TransactionOptions
+  ): Promise<void>
+
+  safeTransferFrom(
+    from: string,
+    to: string,
+    tokenId: number,
+    options?: TransactionOptions
+  ): Promise<void>
 
   transferFrom(
     fromAddress: string,

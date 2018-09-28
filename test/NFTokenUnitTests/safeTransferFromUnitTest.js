@@ -1,78 +1,92 @@
-'use strict';
+'use strict'
 
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  NON_EXISTENT_NFT_ID,
+  RAINFOREST,
+  NON_EXISTENT_ADDRESS,
+  RAINFOREST_TRUST_ADDRESS,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_URL
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const ERC721Reciever = artifacts.require('./test/ERC721ReceiverTest.sol')
+const EmptyContract = artifacts.require('./test/EmptyContract.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('NFToken: safeTransferFrom Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const OWNER_ADDRESS = accounts[0]
+  const TRANSFERRED_ADDRESS = accounts[3]
 
-contract('NFToken: safeTransferFrom Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  let nftId = 1
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-  });
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+    await springNFTInstance.createNFT(
+      NFT_A_ID, OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_A_TRAITS, NFT_A_TYPE,
+      { from: SIGNER_ADDRESS })
+  })
 
-  it('checks that proper values were updated', async function() {
-    const newNFTHolder = accounts[3]
-    let owner = await springNFTInstance.ownerOf.call(nftId)
-    assert.equal(owner, nftHolder)
+  it('checks that transferred token has new owner after safe transfer', async () => {
+    await springNFTInstance.transferFrom(
+      OWNER_ADDRESS, TRANSFERRED_ADDRESS, NFT_A_ID, { from: OWNER_ADDRESS })
+    assert.equal(await springNFTInstance.ownerOf.call(NFT_A_ID), TRANSFERRED_ADDRESS)
+  })
 
-    await springNFTInstance.transferFrom(nftHolder, newNFTHolder, nftId)
+  it('throw if safe transfer "to" zero address', async () => {
+    await utils.assertRevert(
+      springNFTInstance.safeTransferFrom(
+        OWNER_ADDRESS, NON_EXISTENT_ADDRESS, NFT_A_ID, { from: OWNER_ADDRESS }))
+  })
 
-    owner = await springNFTInstance.ownerOf.call(nftId)
-    assert.equal(owner, newNFTHolder)
-  });
+  it('throw if msg.sender does not have permission to safe transfer', async () => {
+    await utils.assertRevert(
+      springNFTInstance.safeTransferFrom(
+        OWNER_ADDRESS, TRANSFERRED_ADDRESS, NFT_A_ID, { from: SIGNER_ADDRESS }))
+  })
 
-  it('throw if "to" is zero address', async function() {
-    const newNFTHolder = accounts[3]
+  it('throw if token does not have an owner', async () => {
+    await utils.assertRevert(
+      springNFTInstance.safeTransferFrom(
+        OWNER_ADDRESS, TRANSFERRED_ADDRESS, NON_EXISTENT_NFT_ID, { from: OWNER_ADDRESS }))
+  })
 
-    await utils.assertRevert(springNFTInstance.safeTransferFrom(nftHolder, '0x0', nftId))
-    await springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId)
-  });
+  it('throw if safe transfer from address is not token owner address', async () => {
+    await utils.assertRevert(
+      springNFTInstance.safeTransferFrom(
+        TRANSFERRED_ADDRESS, OWNER_ADDRESS, NFT_A_ID, { from: OWNER_ADDRESS }))
+  })
 
-  it('throw if msg.sender does not have permission to transfer', async function() {
-    const newNFTHolder = accounts[3]
+  it('throws when transfer to receiver contract does not return ERC721_ON_RECEIVED_MAGIC_HASH',
+    async () => {
+      const recieverContract = await EmptyContract.new()
 
-    await utils.assertRevert(springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId, {from: wetrustAddress}))
-    await springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId)
-  });
+      await utils.assertRevert(
+        springNFTInstance.safeTransferFrom(
+          OWNER_ADDRESS, recieverContract.address, NFT_A_ID, { from: OWNER_ADDRESS }))
+    })
 
-  it('throw if token does not have an owner', async function() {
-    const newNFTHolder = accounts[3]
+  it('checks transfer to receiver contract succeeds when ERC721_ON_RECEIVED_MAGIC_HASH is returned',
+    async () => {
+      const recieverContract = await ERC721Reciever.new()
 
-    await utils.assertRevert(springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId + 1))
-    await springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId)
-  });
+      await springNFTInstance.safeTransferFrom(
+        OWNER_ADDRESS, recieverContract.address, NFT_A_ID, { from: OWNER_ADDRESS })
+    })
 
-  it('throw if from does not equal owner address', async function() {
-    const newNFTHolder = accounts[3]
-
-    await utils.assertRevert(springNFTInstance.safeTransferFrom(newNFTHolder, accounts[0], nftId))
-    await springNFTInstance.safeTransferFrom(nftHolder, newNFTHolder, nftId)
-  });
-
-  it('throws that ERC721_ON_RECEIVED hash is returned not from receiver', async function() {
-    const recieverContract = await ERC721Reciever.new();
-
-    await utils.assertRevert(springNFTInstance.safeTransferFrom(nftHolder, recieverContract.address, nftId))
-
-    await recieverContract.setValueToReturnOnReceived('0x150b7a02')
-
-    await springNFTInstance.safeTransferFrom(nftHolder, recieverContract.address, nftId)
-  });
-
-  it('checks that transfer event is emitted', async function() {
-    const newNFTHolder = accounts[3]
-    const res = await springNFTInstance.transferFrom(nftHolder, newNFTHolder, nftId)
-
+  it('checks that transfer event is emitted', async () => {
+    const res = await springNFTInstance.safeTransferFrom(
+      OWNER_ADDRESS, TRANSFERRED_ADDRESS, NFT_A_ID, { from: OWNER_ADDRESS })
     assert.equal(res.logs[0].event, 'Transfer')
-  });
-});
+  })
+})
