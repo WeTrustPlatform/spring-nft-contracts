@@ -1,6 +1,5 @@
 import * as Web3 from 'web3';
 import { SpringNFTContract } from 'spring-nft-contract';
-import { ERC721ReceiverTestContract } from 'erc-721-receiver-test-contract';
 
 declare global {
   function contract(name: string, test: ContractTest): void;
@@ -23,7 +22,7 @@ interface Contract<T> {
 interface Artifacts {
   require(name: 'SpringNFT.sol'): Contract<SpringNFTContract>;
 
-  require(name: './test/ERC721ReceiverTest.sol'): Contract<ERC721ReceiverTestContract>
+  require(name: './test/ERC721ReceiverTest.sol'): Contract<void>
 
   require(name: './test/EmptyContract.sol'): Contract<void>
 }
