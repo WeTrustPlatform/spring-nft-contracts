@@ -1,24 +1,14 @@
 pragma solidity ^0.4.23;
 
-import "../interface/ERC721.sol";
-contract ERC721ReceiverTest {
+import "../interface/ERC721TokenReceiver.sol";
 
-    address from;
-    address operator;
-    uint256 tokenId;
-    bytes data;
-    bytes4 valueToReturnOnReceived;
+contract ERC721ReceiverTest is ERC721TokenReceiver {
 
-    function setValueToReturnOnReceived (bytes4 value) public {
-        valueToReturnOnReceived = value;
-    }
+    event abitraryEvent(address indexed _operator, address indexed _from, uint256 _tokenId, bytes _data);
 
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) external returns(bytes4) {
-        operator = _operator;
-        from = _from;
-        tokenId = _tokenId;
-        data = _data;
-
-        return valueToReturnOnReceived;
+    function onERC721Received(
+        address _operator, address _from, uint256 _tokenId, bytes _data) external returns (bytes4) {
+        emit abitraryEvent(_operator, _from, _tokenId, _data);
+        return 0x150b7a02;
     }
 }
