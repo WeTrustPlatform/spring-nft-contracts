@@ -34,6 +34,8 @@ export interface NFTTokenContract extends ContractInstance {
 
   tokenOfOwnerByIndex(owner: string, index: number): Promise<number>
 
+  tokenURI(tokenId: number): Promise<string>
+
   transferFrom(
     fromAddress: string,
     toAddress: string,
