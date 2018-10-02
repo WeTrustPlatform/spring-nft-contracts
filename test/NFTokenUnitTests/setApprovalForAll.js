@@ -1,43 +1,53 @@
-'use strict';
+'use strict'
 
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  NON_EXISTENT_ADDRESS,
+  RAINFOREST,
+  RAINFOREST_TRUST_ADDRESS,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_URL
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('NFToken: setApprovalForAll Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const OWNER_ADDRESS = accounts[0]
+  const OPERATOR_ADDRESS = accounts[2]
 
-contract('NFToken: setApprovalForAll Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  const nftId = 1
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
-    
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-  });
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-  it('checks that proper values are updated', async function() {
-    const operatorToTest = accounts[2]
-    await springNFTInstance.setApprovalForAll(operatorToTest, true, {from: nftHolder})
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+    await springNFTInstance.createNFT(
+      NFT_A_ID, OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_A_TRAITS, NFT_A_TYPE,
+      { from: SIGNER_ADDRESS })
+  })
 
-    const operator = await springNFTInstance.isApprovedForAll.call(nftHolder, operatorToTest)
+  it('checks that operator address is set successfully by owner address', async () => {
+    await springNFTInstance.setApprovalForAll(OPERATOR_ADDRESS, true, { from: OWNER_ADDRESS })
 
-    assert.equal(operator, true)
-  });
+    assert.isTrue(await springNFTInstance.isApprovedForAll.call(OWNER_ADDRESS, OPERATOR_ADDRESS))
+  })
 
-  it('throws if operator is a zero address', async function() {
-    const operatorToTest = accounts[2]
+  it('throws if owner address set approval for all to zero address', async () => {
+    await utils.assertRevert(
+      springNFTInstance.setApprovalForAll(NON_EXISTENT_ADDRESS, true, { from: OWNER_ADDRESS }))
+  })
 
-    await utils.assertRevert(springNFTInstance.setApprovalForAll('0x0', true, {from: nftHolder}))
-    await springNFTInstance.setApprovalForAll(operatorToTest, true, {from: nftHolder})
-  });
-
-  it('checks that approvalForAll event is emitted', async function() {
-    const operatorToTest = accounts[2]
-    const res = await springNFTInstance.setApprovalForAll(operatorToTest, true, {from: nftHolder})
+  it('checks that approvalForAll event is emitted after owner successfully set', async () => {
+    const res = await springNFTInstance.setApprovalForAll(
+      OPERATOR_ADDRESS, true, { from: OWNER_ADDRESS })
     assert.equal(res.logs[0].event, 'ApprovalForAll')
-  });
-});
+  })
+})
