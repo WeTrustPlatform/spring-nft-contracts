@@ -1,44 +1,62 @@
-'use strict';
+'use strict'
 
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  NFT_B_ID,
+  NFT_B_TRAITS,
+  NFT_B_TYPE,
+  NON_EXISTENT_ADDRESS,
+  RAINFOREST,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_ADDRESS,
+  RAINFOREST_TRUST_URL
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
-const consts = require('../utils/consts')
 
-let springNFTInstance;
+contract('NFToken: tokenOfOwnerByIndex Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const OWNER_ADDRESS = accounts[0]
 
-contract('NFToken: tokenOfOwnerByIndex Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  let nftId = 1;
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-  });
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+    await springNFTInstance.createNFT(
+      NFT_A_ID, OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_A_TRAITS, NFT_A_TYPE,
+      { from: SIGNER_ADDRESS })
+  })
 
-  it('checks that proper values were updated', async function() {
-    let tokenId = await springNFTInstance.tokenOfOwnerByIndex.call(nftHolder, 0)
-    assert.equal(tokenId, nftId)
+  it('checks that 1st token of owner is returned when index is 0', async () => {
+    assert.equal(await springNFTInstance.tokenOfOwnerByIndex(OWNER_ADDRESS, 0), NFT_A_ID)
+  })
 
-    nftId = 287423
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
+  it('checks that 2nd token of owner is returned when index is 1', async () => {
+    await springNFTInstance.createNFT(
+      NFT_B_ID, OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_B_TRAITS, NFT_B_TYPE,
+      { from: SIGNER_ADDRESS })
 
-    tokenId = await springNFTInstance.tokenOfOwnerByIndex.call(nftHolder, 1)
-    assert.equal(tokenId, nftId)
-  });
+    assert.equal(await springNFTInstance.tokenOfOwnerByIndex(OWNER_ADDRESS, 1), NFT_B_ID)
+  })
 
-  it('throw if owner address is zero address', async function() {
-    await utils.assertRevert(springNFTInstance.tokenOfOwnerByIndex.call(consts.ZERO_ADDRESS, 0))
-    await springNFTInstance.tokenOfOwnerByIndex.call(nftHolder, 0)
-  });
+  it('throw if owner address is zero address', async () => {
+    await utils.assertRevert(springNFTInstance.tokenOfOwnerByIndex.call(NON_EXISTENT_ADDRESS, 0))
+  })
 
-  it('throw if index is greater than or equal to balanceOf owner', async function() {
-    const ownerBalance = await springNFTInstance.balanceOf(nftHolder)
-    await utils.assertRevert(springNFTInstance.tokenOfOwnerByIndex.call(nftHolder, ownerBalance))
-    await springNFTInstance.tokenOfOwnerByIndex.call(nftHolder, ownerBalance - 1)
-  });
-});
+  it('throw if index is equal to # of tokens owner has', async () => {
+    await utils.assertRevert(springNFTInstance.tokenOfOwnerByIndex.call(OWNER_ADDRESS, 1))
+  })
+
+  it('throw if index is greater than # of token owner has', async () => {
+    await utils.assertRevert(springNFTInstance.tokenOfOwnerByIndex.call(OWNER_ADDRESS, 2))
+  })
+})
