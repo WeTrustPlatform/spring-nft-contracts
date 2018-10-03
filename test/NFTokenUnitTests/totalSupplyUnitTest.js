@@ -1,37 +1,49 @@
-'use strict';
+'use strict'
 
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  NFT_B_ID,
+  NFT_B_TRAITS,
+  NFT_B_TYPE,
+  RAINFOREST,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_ADDRESS,
+  RAINFOREST_TRUST_URL
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
-const utils = require('../utils/utils')
-const consts = require('../utils/consts')
 
-let springNFTInstance;
+contract('NFToken: totalSupply Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const NFT_A_OWNER_ADDRESS = accounts[0]
+  const NFT_B_OWNER_ADDRESS = accounts[2]
 
-contract('NFToken: totalSupply Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  let nftId = 1;
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+  })
 
-  });
+  it('checks that total supply is 0 when no token has been created', async () => {
+    assert.equal(await springNFTInstance.totalSupply(), 0)
+  })
 
-  it('checks that proper values were returned', async function() {
-    let totalSupply = await springNFTInstance.totalSupply.call()
-    assert.equal(totalSupply, 0)
+  it('checks that total supply is 2 when 2 tokens have been created', async () => {
+    await springNFTInstance.createNFT(
+      NFT_A_ID, NFT_A_OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_A_TRAITS, NFT_A_TYPE,
+      { from: SIGNER_ADDRESS })
+    await springNFTInstance.createNFT(
+      NFT_B_ID, NFT_B_OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_B_TRAITS, NFT_B_TYPE,
+      { from: SIGNER_ADDRESS })
 
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-
-    totalSupply = await springNFTInstance.totalSupply.call()
-    assert.equal(totalSupply, 1)
-
-    await springNFTInstance.createNFT(nftId + 1, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-
-    totalSupply = await springNFTInstance.totalSupply.call()
-    assert.equal(totalSupply, 2)
-  });
-});
+    assert.equal(await springNFTInstance.totalSupply(), 2)
+  })
+})

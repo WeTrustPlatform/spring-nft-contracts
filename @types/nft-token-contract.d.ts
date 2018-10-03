@@ -36,6 +36,8 @@ export interface NFTTokenContract extends ContractInstance {
 
   tokenURI(tokenId: number): Promise<string>
 
+  totalSupply(): Promise<number>
+
   transferFrom(
     fromAddress: string,
     toAddress: string,
