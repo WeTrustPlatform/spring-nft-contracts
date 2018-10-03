@@ -1,5 +1,5 @@
 import NFTTokenContract from './nft-token-contract'
-import { TransactionOptions } from "./contracts";
+import { TransactionOptions } from "./contracts"
 
 export interface SpringNFTContract extends NFTTokenContract {
   addRecipient(
@@ -7,6 +7,12 @@ export interface SpringNFTContract extends NFTTokenContract {
     name: string,
     url: string,
     owner: string,
+    options?: TransactionOptions
+  ): Promise<void>;
+
+  addRecipientUpdate(
+    recipientId: string,
+    updateId: string,
     options?: TransactionOptions
   ): Promise<void>;
 
@@ -19,7 +25,11 @@ export interface SpringNFTContract extends NFTTokenContract {
     options?: TransactionOptions
   ): Promise<number>;
 
-  recipients(recipientId: string): Promise<(string | object | number)[]>
+  getUpdateCount(recipientId: string): Promise<number>;
 
-  setPaused(paused: boolean, options?: TransactionOptions): Promise<void>
+  recipients(recipientId: string): Promise<(string | object | number)[]>;
+
+  recipientUpdates(recipientId: string, index: number): Promise<string[]>;
+
+  setPaused(paused: boolean, options?: TransactionOptions): Promise<void>;
 }
