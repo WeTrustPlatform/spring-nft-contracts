@@ -18,4 +18,8 @@ export interface SpringNFTContract extends NFTTokenContract {
     nftType: string,
     options?: TransactionOptions
   ): Promise<number>;
+
+  recipients(recipientId: string): object[]
+
+  setPaused(paused: boolean, options?: TransactionOptions): Promise<void>
 }
