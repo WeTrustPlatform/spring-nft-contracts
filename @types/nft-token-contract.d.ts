@@ -30,6 +30,8 @@ export interface NFTTokenContract extends ContractInstance {
     options?: TransactionOptions
   ): Promise<void>
 
+  tokenByIndex(index: number): Promise<number>
+
   transferFrom(
     fromAddress: string,
     toAddress: string,
