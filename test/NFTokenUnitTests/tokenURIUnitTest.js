@@ -1,31 +1,54 @@
-'use strict';
+'use strict'
 
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  NFT_B_ID,
+  NFT_B_TRAITS,
+  NFT_B_TYPE,
+  RAINFOREST,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_ADDRESS,
+  RAINFOREST_TRUST_URL
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
-const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('NFToken: approve Unit Test', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const NFT_A_OWNER_ADDRESS = accounts[0]
+  const NFT_B_OWNER_ADDRESS = accounts[2]
 
-contract('NFToken: approve Unit Test', function(accounts) {
-  const recipientId = '0x1'
-  const nftHolder = accounts[0]
-  let nftId = 1
-  let nftId2 = 2837
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-    await springNFTInstance.createNFT(nftId2, nftHolder, recipientId, '0x01', '0x01', {from: wetrustAddress})
-  });
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+  })
 
-  it('checks that proper values are returned', async function() {
-    let tokenURI = await springNFTInstance.tokenURI.call(nftId);
-    assert.equal(tokenURI, `https://spring.wetrust.io/shiba/${nftId}`)
+  it('checks that token A URI is correctly returned', async () => {
+    await springNFTInstance.createNFT(
+      NFT_A_ID, NFT_A_OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_A_TRAITS, NFT_A_TYPE,
+      { from: SIGNER_ADDRESS })
 
-    tokenURI = await springNFTInstance.tokenURI.call(nftId2);
-    assert.equal(tokenURI, `https://spring.wetrust.io/shiba/${nftId2}`)
-  });
-});
+    assert.equal(
+      await springNFTInstance.tokenURI(NFT_A_ID),
+      `https://spring.wetrust.io/shiba/${NFT_A_ID}`)
+  })
+
+  it('checks that token B URI is correctly returned', async () => {
+    await springNFTInstance.createNFT(
+      NFT_B_ID, NFT_B_OWNER_ADDRESS, RAINFOREST_TRUST_ID, NFT_B_TRAITS, NFT_B_TYPE,
+      { from: SIGNER_ADDRESS })
+
+    assert.equal(
+      await springNFTInstance.tokenURI(NFT_B_ID),
+      `https://spring.wetrust.io/shiba/${NFT_B_ID}`)
+  })
+})
