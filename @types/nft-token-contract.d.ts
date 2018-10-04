@@ -5,43 +5,45 @@ export interface NFTTokenContract extends ContractInstance {
     approve: string,
     tokenId: number,
     options?: TransactionOptions
-  ): Promise<void>
+  ): Promise<void>;
 
-  balanceOf(owner: string): Promise<number>
+  balanceOf(owner: string): Promise<number>;
 
-  getApproved(tokenId: number): Promise<string>
+  getApproved(tokenId: number): Promise<string>;
 
-  getOwnedTokenList(owner: string): Promise<number[]>
+  getOwnedTokenList(owner: string): Promise<number[]>;
 
-  isApprovedForAll(owner: string, operator: string): Promise<boolean>
+  isApprovedForAll(owner: string, operator: string): Promise<boolean>;
 
-  ownerOf(tokenId: number): Promise<string>
+  nft(tokenId: number): Promise<(string | object | number)[]>;
+
+  ownerOf(tokenId: number): Promise<string>;
 
   setApprovalForAll(
     operator: string,
     approved: boolean,
     options?: TransactionOptions
-  ): Promise<void>
+  ): Promise<void>;
 
   safeTransferFrom(
     from: string,
     to: string,
     tokenId: number,
     options?: TransactionOptions
-  ): Promise<void>
+  ): Promise<void>;
 
-  tokenByIndex(index: number): Promise<number>
+  tokenByIndex(index: number): Promise<number>;
 
-  tokenOfOwnerByIndex(owner: string, index: number): Promise<number>
+  tokenOfOwnerByIndex(owner: string, index: number): Promise<number>;
 
-  tokenURI(tokenId: number): Promise<string>
+  tokenURI(tokenId: number): Promise<string>;
 
-  totalSupply(): Promise<number>
+  totalSupply(): Promise<number>;
 
   transferFrom(
     fromAddress: string,
     toAddress: string,
     tokenId: number,
     options?: TransactionOptions
-  ): Promise<void>
+  ): Promise<void>;
 }
