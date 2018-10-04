@@ -1,73 +1,91 @@
-'use strict';
+'use strict'
 
+const {
+  RAINFOREST,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_URL,
+  RAINFOREST_TRUST_ADDRESS,
+  VIETSEEDS_ID,
+  VIETSEEDS,
+  VIETSEEEDS_URL,
+  VIETSEEDS_ADDRESS
+} = require('../test-data')
+
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('SpringNFT: updateRecipientInfo Unit Tests', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const NEW_RAINFORES_TRUST_ADDRESS = accounts[4]
+  const NON_SIGNER_ADDRESS = accounts[0]
 
-contract('SpringNFT: updateRecipientInfo Unit Tests', function(accounts) {
-  const recipientId = '0x1'
-  const recipientOwner = accounts[4]
-  let tokenId = 0
+  const NEW_RAINFOREST_TRUST = 'new rainforest trust name'
+  const NEW_RAINFOREST_TRUST_URL = 'new rainforest trust url'
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  let springNFTInstance
 
-    tokenId++;
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', recipientOwner, {from: wetrustAddress})
-  });
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-  it('checks that proper values were updated', async function() {
-    const recipientNameToTest = 'new name'
-    const recipientUrlToTest = 'new url'
-    const recipientOwnerAddressToTest = accounts[9]
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
+  })
 
-    let recipient = await springNFTInstance.recipients.call(recipientId)
-    assert.equal(recipient[0], 'name') // name
-    assert.equal(recipient[1], 'url') // url
-    assert.equal(recipient[2], recipientOwner) // owner
-    assert.equal(recipient[3], 0) // nftCount
-    assert.equal(recipient[4], true) // exists
-
+  it('checks that new name, new url, new address are updated', async () => {
     await springNFTInstance.updateRecipientInfo(
-      recipientId,
-      recipientNameToTest,
-      recipientUrlToTest,
-      recipientOwnerAddressToTest,
-      {from: wetrustAddress})
+      RAINFOREST_TRUST_ID,
+      NEW_RAINFOREST_TRUST,
+      NEW_RAINFOREST_TRUST_URL,
+      NEW_RAINFORES_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
 
-    recipient = await springNFTInstance.recipients.call(recipientId)
+    const updatedRecipient = await springNFTInstance.recipients.call(RAINFOREST_TRUST_ID)
 
-    assert.equal(recipient[0], recipientNameToTest) // name
-    assert.equal(recipient[1], recipientUrlToTest) // url
-    assert.equal(recipient[2], recipientOwnerAddressToTest) // owner
-    assert.equal(recipient[3], 0) // nftCount
-    assert.equal(recipient[4], true) // exists
-  });
+    assert.equal(updatedRecipient[0], NEW_RAINFOREST_TRUST)         // name
+    assert.equal(updatedRecipient[1], NEW_RAINFOREST_TRUST_URL)     // url
+    assert.equal(updatedRecipient[2], NEW_RAINFORES_TRUST_ADDRESS)  // owner
+    assert.equal(updatedRecipient[3], 0)                            // nftCount
+    assert.isTrue(updatedRecipient[4])                              // exists
+  })
 
-  it('throw if not from wetrust address', async function() {
-    // by default it'll be sent from non WeTrust address
-    await utils.assertRevert(springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0'))
+  it('throw if updating recipient info by a non wetrust signer address', async () => {
+    await utils.assertRevert(
+      springNFTInstance.updateRecipientInfo(
+        RAINFOREST_TRUST_ID,
+        NEW_RAINFOREST_TRUST,
+        NEW_RAINFOREST_TRUST_URL,
+        NEW_RAINFORES_TRUST_ADDRESS,
+        { from: NON_SIGNER_ADDRESS }))
+  })
 
-    await springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress})
-  });
+  it('throw if updating info of non-existent recipient', async () => {
+    await utils.assertRevert(
+      springNFTInstance.updateRecipientInfo(
+        VIETSEEDS_ID, VIETSEEDS, VIETSEEEDS_URL, VIETSEEDS_ADDRESS, { from: SIGNER_ADDRESS }))
+  })
 
-  it('throw if recipient does not exists', async function() {
-    await springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress})
+  it('throw if updating recipient new name to empty string', async () => {
+    await utils.assertRevert(
+      springNFTInstance.updateRecipientInfo(
+        RAINFOREST_TRUST_ID,
+        '',
+        NEW_RAINFOREST_TRUST_URL,
+        NEW_RAINFORES_TRUST_ADDRESS,
+        { from: SIGNER_ADDRESS }))
+  })
 
-    await utils.assertRevert(springNFTInstance.updateRecipientInfo('0x12', 'name', 'url', '0x0'), {from: wetrustAddress})
-  });
+  it('throws if updating recipient info when contract is in paused state', async () => {
+    await springNFTInstance.setPaused(true, { from: MANAGER_ADDRESS })
 
-  it('throw if name of string is empty', async function() {
-    await utils.assertRevert(springNFTInstance.updateRecipientInfo('0x1', '', 'url', '0x0'))
-
-    await springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress})
-  });
-
-  it('throws if contract is in paused state', async function() {
-    await springNFTInstance.setPaused(true, {from: managerAddress})
-    await utils.assertRevert(springNFTInstance.updateRecipientInfo('0x1', 'name', 'url', '0x0', {from: wetrustAddress}))
-  });
-});
+    await utils.assertRevert(
+      springNFTInstance.updateRecipientInfo(
+        RAINFOREST_TRUST_ID,
+        NEW_RAINFOREST_TRUST,
+        NEW_RAINFOREST_TRUST_URL,
+        NEW_RAINFORES_TRUST_ADDRESS,
+        { from: SIGNER_ADDRESS }))
+  })
+})
