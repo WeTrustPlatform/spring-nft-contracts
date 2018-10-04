@@ -1,78 +1,100 @@
-'use strict';
+'use strict'
+
+const {
+  NFT_A_ID,
+  NFT_A_TRAITS,
+  NFT_A_TYPE,
+  RAINFOREST,
+  RAINFOREST_TRUST_ID,
+  RAINFOREST_TRUST_URL,
+  RAINFOREST_TRUST_ADDRESS,
+  NON_EXISTENT_ADDRESS
+} = require('../test-data')
 
 const springNFT = artifacts.require('SpringNFT.sol')
 const abi = require('ethereumjs-abi')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('SpringNFT: redeemToken Unit Tests', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const NON_SIGNER_ADDRESS = accounts[3]
+  const REDEEMER_ADDRESS = accounts[0]
+  const NON_REDEEMER_ADDRESS = accounts[2]
 
-contract('SpringNFT: redeemToken Unit Tests', function(accounts) {
-  const wetrustAddress = accounts[7]
-  const managerAddress = accounts[6];
-  const nftType = '0x00000000'
-  const traits = '0x01'
-  const recipientId = '0x734923c8cdd99dd68ffdcd69a53161694287c1bd7454fc6696be0ad7c4ce2e9a'
-  let nftId = '123';
-  let redeemableToken;
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  let springNFTInstance
+  let redeemableToken
 
-    await springNFTInstance.addRecipient(recipientId, 'name', 'url', '0x0', {from: wetrustAddress})
+  const paddedHex = (value) => '0x' + value
+  const nonPaddedHex = (value) => value.substring(2)
 
-    const message = '0x' + abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, nftId]).toString('hex') + nftType.substring(2) + abi.rawEncode(['bytes32', 'bytes32'], [traits, recipientId]).toString('hex')
-    const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftId, nftType, traits, recipientId);
-    const signature = await web3.eth.sign(accounts[7], msgHash)
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
 
-    redeemableToken = message + signature.substring(2)
-  });
+    await springNFTInstance.addRecipient(
+      RAINFOREST_TRUST_ID, RAINFOREST, RAINFOREST_TRUST_URL, RAINFOREST_TRUST_ADDRESS,
+      { from: SIGNER_ADDRESS })
 
-  it('checks that proper values were updated', async function() {
-    const redeemerAddress = accounts[0]
+    const message =
+      abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, NFT_A_ID]).toString('hex')
+      + nonPaddedHex(NFT_A_TYPE)
+      + abi.rawEncode(['bytes32', 'bytes32'], [NFT_A_TRAITS, RAINFOREST_TRUST_ID]).toString('hex')
 
-    // first check to see how many NFT redeemer have
-    let nftCount = await springNFTInstance.balanceOf(redeemerAddress)
-    assert.equal(nftCount, 0)
-    await springNFTInstance.redeemToken(redeemableToken)
+    const msgHash = await springNFTInstance.createRedeemMessageHash(
+      NFT_A_ID, NFT_A_TYPE, NFT_A_TRAITS, RAINFOREST_TRUST_ID)
 
+    const signature = await web3.eth.sign(SIGNER_ADDRESS, msgHash)
+    redeemableToken = paddedHex(message + nonPaddedHex(signature))
+  })
 
-    nftCount = await springNFTInstance.balanceOf(redeemerAddress)
-    assert.equal(nftCount, 1)
+  it('checks that token is created after redeeming', async () => {
+    await springNFTInstance.redeemToken(redeemableToken, { from: REDEEMER_ADDRESS })
 
-    const token = await springNFTInstance.nft(nftId);
-    assert.equal(token[0], redeemerAddress) // owner
-    assert.equal(token[2], '0x' + abi.rawEncode(['bytes32'], [traits]).toString('hex'))
-    assert.equal(token[4], nftType)
-    assert.equal(token[5], '0x' + abi.rawEncode(['bytes32'], [recipientId]).toString('hex'))
-  });
+    assert.equal(await springNFTInstance.balanceOf(REDEEMER_ADDRESS), 1)
 
-  it('checks that Transfer event is emitted', async function() {
+    const token = await springNFTInstance.nft(NFT_A_ID)
+    assert.equal(token[0], REDEEMER_ADDRESS)
+    assert.equal(token[2], NFT_A_TRAITS)
+    assert.equal(token[4], NFT_A_TYPE)
+    assert.equal(token[5], RAINFOREST_TRUST_ID)
+  })
+
+  it('checks that Transfer event is emitted after successful redeeming', async () => {
     const res = await springNFTInstance.redeemToken(redeemableToken)
+
     assert.equal(res.logs[0].event, 'Transfer')
-    assert.equal(res.logs[0].args._from, '0x0000000000000000000000000000000000000000')
-    assert.equal(res.logs[0].args._to, '0x627306090abab3a6e1400e9345bc60c78a8bef57')
-    assert.equal(res.logs[0].args._tokenId.toNumber(), '123')
-  });
+    assert.equal(res.logs[0].args._from, NON_EXISTENT_ADDRESS)
+    assert.equal(res.logs[0].args._to, REDEEMER_ADDRESS)
+    assert.equal(res.logs[0].args._tokenId.toNumber(), NFT_A_ID)
+  })
 
-  it('throw if redeem script is used more than once', async function() {
-    await springNFTInstance.redeemToken(redeemableToken)
+  it('throw if redeem signed message is used more than once', async () => {
+    await springNFTInstance.redeemToken(redeemableToken, { from: REDEEMER_ADDRESS })
 
+    await utils.assertRevert(
+      springNFTInstance.redeemToken(redeemableToken, { from: NON_REDEEMER_ADDRESS }))
+  })
+
+  it('throws if redeem signed message was not signed by wetrust signer address', async () => {
+    const message =
+      abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, NFT_A_ID]).toString('hex')
+      + nonPaddedHex(NFT_A_TYPE)
+      + abi.rawEncode(['bytes32', 'bytes32'], [NFT_A_TRAITS, RAINFOREST_TRUST_ID]).toString('hex')
+
+    const msgHash = await springNFTInstance.createRedeemMessageHash(
+      NFT_A_ID, NFT_A_TYPE, NFT_A_TRAITS, RAINFOREST_TRUST_ID)
+
+    const signature = await web3.eth.sign(NON_SIGNER_ADDRESS, msgHash)
+    redeemableToken = paddedHex(message + nonPaddedHex(signature))
+
+    // perform test
     await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
-  });
+  })
 
-  it('throws if signer is not wetrust', async function() {
-    // test that it works with wetrust signed token
-    await springNFTInstance.redeemToken(redeemableToken)
+  it('throws if redeeming when contract is in paused state', async () => {
+    await springNFTInstance.setPaused(true, { from: MANAGER_ADDRESS })
 
-    const message = '0x' + abi.rawEncode(['address', 'uint256'], [springNFTInstance.address, nftId]).toString('hex')  + nftType.substring(2) + abi.rawEncode(['bytes32', 'bytes32'], [traits, recipientId]).toString('hex')
-    const msgHash = await springNFTInstance.createRedeemMessageHash.call(nftId, nftType, traits, recipientId);
-    const signature = utils.createSignedMsg([5],  msgHash.substring(2))
-
-    redeemableToken = message + signature.substring(2)
-    await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
-  });
-
-  it('throws if contract is in paused state', async function() {
-    await springNFTInstance.setPaused(true, {from: managerAddress})
-    await utils.assertRevert(springNFTInstance.redeemToken(redeemableToken))
-  });
-});
+    await utils.assertRevert(
+      springNFTInstance.redeemToken(redeemableToken, { from: REDEEMER_ADDRESS }))
+  })
+})
