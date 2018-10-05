@@ -2,6 +2,12 @@ import NFTTokenContract from './nft-token-contract'
 import { TransactionOptions } from "./contracts"
 
 export interface SpringNFTContract extends NFTTokenContract {
+  addArtistSignature(
+    nftId: number,
+    artistSignature: string,
+    options?: TransactionOptions
+  ): Promise<void>;
+
   addRecipient(
     recipientId: string,
     name: string,
@@ -35,6 +41,8 @@ export interface SpringNFTContract extends NFTTokenContract {
   ): Promise<string>;
 
   getUpdateCount(recipientId: string): Promise<number>;
+
+  nftArtistSignature(tokenId: number): Promise<string>;
 
   recipients(recipientId: string): Promise<(string | object | number)[]>;
 
