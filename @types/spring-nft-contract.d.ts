@@ -16,6 +16,8 @@ export interface SpringNFTContract extends NFTTokenContract {
     options?: TransactionOptions
   ): Promise<void>;
 
+  changeWeTrustSigner(newAddress: string, options?: TransactionOptions): Promise<void>;
+
   createNFT(
     tokenId: number,
     receiver: string,
@@ -32,4 +34,6 @@ export interface SpringNFTContract extends NFTTokenContract {
   recipientUpdates(recipientId: string, index: number): Promise<string[]>;
 
   setPaused(paused: boolean, options?: TransactionOptions): Promise<void>;
+
+  wetrustSigner(): Promise<string>;
 }

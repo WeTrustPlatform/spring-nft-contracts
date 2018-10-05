@@ -1,41 +1,40 @@
-'use strict';
+'use strict'
 
+const assert = require('chai').assert
 const springNFT = artifacts.require('SpringNFT.sol')
 const utils = require('../utils/utils')
 
-let springNFTInstance;
+contract('SpringNFT: changeWeTrustSigner Unit Tests', (accounts) => {
+  const MANAGER_ADDRESS = accounts[6]
+  const SIGNER_ADDRESS = accounts[7]
+  const NEW_SIGNER_ADDRESS = accounts[8]
+  const NON_MANAGER_ADDRESS = accounts[0]
 
-contract('SpringNFT: changeWeTrustSigner Unit Tests', function(accounts) {
-  let tokenId = 0
+  let springNFTInstance
 
-  const wetrustAddress = accounts[7];
-  const managerAddress = accounts[6];
-  beforeEach(async function() {
-    springNFTInstance = await springNFT.new(wetrustAddress, managerAddress);
+  beforeEach(async () => {
+    springNFTInstance = await springNFT.new(SIGNER_ADDRESS, MANAGER_ADDRESS)
+  })
 
-    tokenId++;
-  });
+  it('checks that signer address is specified upon instance creation', async () => {
+    assert.equal(await springNFTInstance.wetrustSigner(), SIGNER_ADDRESS)
+  })
 
-  it('checks that proper values were updated', async function() {
-    let WeTrustAddress = await springNFTInstance.wetrustSigner.call();
-    assert.equal(WeTrustAddress, wetrustAddress)
+  it('cheks that signer address is updated by manager address', async () => {
+    await springNFTInstance.changeWeTrustSigner(NEW_SIGNER_ADDRESS, { from: MANAGER_ADDRESS })
 
-    const newWeTrustAddress = accounts[8]
-    await springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress})
+    assert.equal(await springNFTInstance.wetrustSigner(), NEW_SIGNER_ADDRESS)
+  })
 
-    WeTrustAddress = await springNFTInstance.wetrustSigner.call();
-    assert.equal(WeTrustAddress, newWeTrustAddress)
-  });
+  it('throws if non manager address is updating signer address', async () => {
+    await utils.assertRevert(
+      springNFTInstance.changeWeTrustSigner(NEW_SIGNER_ADDRESS, { from: NON_MANAGER_ADDRESS }))
+  })
 
-  it('throws if not from WeTrustAddress', async function() {
-    const newWeTrustAddress = accounts[8]
-    await utils.assertRevert(springNFTInstance.changeWeTrustSigner(newWeTrustAddress))
-    await springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress})
-  });
+  it('throws if updating signer address when contract state is paused', async () => {
+    await springNFTInstance.setPaused(true, { from: MANAGER_ADDRESS })
 
-  it('throws if contract is in paused state', async function() {
-    const newWeTrustAddress = accounts[8]
-    await springNFTInstance.setPaused(true, {from: managerAddress})
-    await utils.assertRevert(springNFTInstance.changeWeTrustSigner(newWeTrustAddress, {from: managerAddress}))
-  });
-});
+    await utils.assertRevert(
+      springNFTInstance.changeWeTrustSigner(NEW_SIGNER_ADDRESS, { from: MANAGER_ADDRESS }))
+  })
+})
