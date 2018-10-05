@@ -14,3 +14,6 @@ To check the test coverage
 ```yaml
 ./node_modules/.bin/solidity-coverage
 ```
+### License
+[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.txt) &copy; WeTrustPlatform
+
