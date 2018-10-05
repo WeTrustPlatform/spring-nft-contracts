@@ -104,36 +104,25 @@ contract('SpringNFT: determineEdition Unit Tests', async (accounts) => {
       })
     })
 
-  describe('should return edition 16 for the 17th generation of 4900 tokens: 37601st - 42500th',
+  describe('should return edition 16 for the 17th generation of 5000 tokens: 37601st - 42600th',
     () => {
       it('should return edition 16 for the 37601st token', async () => {
         assert.equal(await springNFTInstance.determineEdition(37601), 16)
       })
 
-      it('should return edition 16 for the 42500th token', async () => {
-        assert.equal(await springNFTInstance.determineEdition(42500), 16)
+      it('should return edition 16 for the 42600th token', async () => {
+        assert.equal(await springNFTInstance.determineEdition(42600), 16)
       })
     })
 
-  describe('should return edition 17 for the 18th generation of 5000 tokens: 42501st - 47500th',
+  describe('should return edition 17 for the 18th generation of 5000 tokens: 42601st - 47600th',
     () => {
-      it('should return edition 17 for the 42501st token', async () => {
-        assert.equal(await springNFTInstance.determineEdition(42501), 17)
+      it('should return edition 17 for the 42601st token', async () => {
+        assert.equal(await springNFTInstance.determineEdition(42601), 17)
       })
 
       it('should return edition 17 for the 47500th token', async () => {
         assert.equal(await springNFTInstance.determineEdition(47500), 17)
-      })
-    })
-
-  describe('should return edition 18 for the 19th generation of 5000 tokens: 47501st - 52500th',
-    () => {
-      it('should return edition 18 for the 47501st token', async () => {
-        assert.equal(await springNFTInstance.determineEdition(47501), 18)
-      })
-
-      it('should return edition 18 for the 52500th token', async () => {
-        assert.equal(await springNFTInstance.determineEdition(52500), 18)
       })
     })
 
