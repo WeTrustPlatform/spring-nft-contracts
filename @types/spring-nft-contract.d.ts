@@ -27,11 +27,20 @@ export interface SpringNFTContract extends NFTTokenContract {
     options?: TransactionOptions
   ): Promise<number>;
 
+  createRedeemMessageHash(
+    tokenId: number,
+    nftType: string,
+    traits: string,
+    recipientId: string
+  ): Promise<string>;
+
   getUpdateCount(recipientId: string): Promise<number>;
 
   recipients(recipientId: string): Promise<(string | object | number)[]>;
 
   recipientUpdates(recipientId: string, index: number): Promise<string[]>;
+
+  redeemToken(signedMessage: string, options?: TransactionOptions): Promise<void>;
 
   setPaused(paused: boolean, options?: TransactionOptions): Promise<void>;
 
