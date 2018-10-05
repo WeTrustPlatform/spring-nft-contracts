@@ -34,6 +34,8 @@ export interface SpringNFTContract extends NFTTokenContract {
     recipientId: string
   ): Promise<string>;
 
+  determineEdition(nextNFTcount: number): Promise<number>;
+
   getUpdateCount(recipientId: string): Promise<number>;
 
   recipients(recipientId: string): Promise<(string | object | number)[]>;
