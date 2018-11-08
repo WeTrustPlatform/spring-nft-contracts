@@ -1,14 +1,16 @@
 {
-  "name": "spring-nft-contracts",
+  "name": "@wetrustplatform/spring-nft-contracts",
   "version": "0.0.1",
-  "description": "WeTrust Spring Smart Contracts",
-  "main": "truffle-config.js",
+  "description": "WeTrust Spring NFT Smart Contracts",
+  "main": ".exported.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "lint": "solium -d contracts/ --fix",
-    "test": "solidity-coverage"
+    "test": "solidity-coverage",
+    "compile": "truffle compile",
+    "beforePublish": "truffle compile && node dist.js"
   },
   "repository": {
     "type": "git",
@@ -24,11 +26,9 @@
     "@types/chai": "^4.1.5",
     "@types/mocha": "^5.2.5",
     "chai-string": "^1.5.0",
-    "solidity-coverage": "^0.5.7",
-    "solium": "^1.1.8"
-  },
-  "dependencies": {
     "chai": "^4.1.2",
+    "solidity-coverage": "^0.5.7",
+    "solium": "^1.1.8",
     "ethereumjs-abi": "^0.6.5",
     "ethereumjs-util": "^5.2.0",
     "truffle": "4.1.14",
